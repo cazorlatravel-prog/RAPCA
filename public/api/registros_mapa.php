@@ -25,7 +25,7 @@ try {
     $sql = "SELECT r.id, r.infra_id, r.usuario_id, r.fecha, r.lat_real, r.lon_real,
                    r.url_cloudinary, r.estado_incidencia, r.observaciones,
                    r.tipo_foto, r.secuencia_comparativa, r.nombre_archivo,
-                   i.nombre AS infra_nombre, i.cod_infoca, i.lat_teorica, i.lon_teorica,
+                   i.nombre AS infra_nombre, i.cod_infoca, i.provincia, i.lat_teorica, i.lon_teorica,
                    u.nombre AS usuario_nombre
             FROM registros r
             INNER JOIN infraestructuras i ON r.infra_id = i.id

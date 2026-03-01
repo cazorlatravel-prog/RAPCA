@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     $stmt = $pdo->prepare(
-        "SELECT id, id_zona, id_unidad, cod_infoca, nombre, superficie,
+        "SELECT id, provincia, id_zona, id_unidad, cod_infoca, nombre, superficie,
                 municipio, monte, cod_monte, pendiente, distancia_aprisco,
                 vegetacion, tipo_contrato, parque, pago_max, desbroce,
                 observaciones, lat_teorica, lon_teorica
@@ -142,18 +142,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $stmt = $pdo->prepare(
         "INSERT INTO infraestructuras
-            (id_zona, id_unidad, cod_infoca, nombre, superficie, municipio,
+            (provincia, id_zona, id_unidad, cod_infoca, nombre, superficie, municipio,
              monte, cod_monte, pendiente, distancia_aprisco, vegetacion,
              tipo_contrato, parque, pago_max, desbroce, observaciones,
              lat_teorica, lon_teorica, activa)
          VALUES
-            (:id_zona, :id_unidad, :cod_infoca, :nombre, :superficie, :municipio,
+            (:provincia, :id_zona, :id_unidad, :cod_infoca, :nombre, :superficie, :municipio,
              :monte, :cod_monte, :pendiente, :distancia_aprisco, :vegetacion,
              :tipo_contrato, :parque, :pago_max, :desbroce, :observaciones,
              :lat, :lon, 1)"
     );
 
     $stmt->execute([
+        ':provincia'         => trim($_POST['provincia'] ?? '') ?: null,
         ':id_zona'           => trim($_POST['id_zona'] ?? '') ?: null,
         ':id_unidad'         => trim($_POST['id_unidad'] ?? '') ?: null,
         ':cod_infoca'        => trim($_POST['cod_infoca'] ?? '') ?: null,

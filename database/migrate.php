@@ -77,7 +77,8 @@ try {
 
     // --- Pre-migration: añadir nuevos campos de infraestructuras (gestión forestal INFOCA) ---
     $newInfraCols = [
-        'id_zona'           => "VARCHAR(50) DEFAULT NULL COMMENT 'Identificador de zona' AFTER id",
+        'provincia'         => "VARCHAR(150) DEFAULT NULL COMMENT 'Provincia' AFTER id",
+        'id_zona'           => "VARCHAR(50) DEFAULT NULL COMMENT 'Identificador de zona' AFTER provincia",
         'id_unidad'         => "VARCHAR(50) DEFAULT NULL COMMENT 'Identificador de unidad' AFTER id_zona",
         'cod_infoca'        => "VARCHAR(50) DEFAULT NULL COMMENT 'Codigo INFOCA' AFTER id_unidad",
         'superficie'        => "DECIMAL(12,2) DEFAULT NULL COMMENT 'Superficie en hectareas' AFTER nombre",

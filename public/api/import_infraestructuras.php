@@ -5,7 +5,7 @@
  * POST: Archivo Excel (.xlsx, .xls) o CSV (.csv)
  *
  * Columnas esperadas (orden o cabeceras):
- *   ID ZONA, ID UNIDAD, COD INFOCA, NOMBRE, SUPERFICIE, MUNICIPIO,
+ *   PROVINCIA, ID ZONA, ID UNIDAD, COD INFOCA, NOMBRE, SUPERFICIE, MUNICIPIO,
  *   MONTE, COD MONTE, PENDIENTE, DISTANCIA APRISCO, VEGETACIÓN,
  *   TIPO CONTRATO, PARQUE, PAGO MAX, DESBROCE, OBSERVACIONES
  *
@@ -56,6 +56,7 @@ try {
 
     // Mapeo de cabeceras → columnas de BD
     $headerMap = [
+        'provincia'         => 'provincia',
         'id zona'           => 'id_zona',
         'id_zona'           => 'id_zona',
         'id unidad'         => 'id_unidad',
@@ -84,7 +85,7 @@ try {
 
     // Orden por defecto si no se reconocen cabeceras
     $defaultOrder = [
-        'id_zona', 'id_unidad', 'cod_infoca', 'nombre', 'superficie',
+        'provincia', 'id_zona', 'id_unidad', 'cod_infoca', 'nombre', 'superficie',
         'municipio', 'monte', 'cod_monte', 'pendiente', 'distancia_aprisco',
         'vegetacion', 'tipo_contrato', 'parque', 'pago_max', 'desbroce', 'observaciones',
     ];
@@ -127,11 +128,11 @@ try {
     $errors = [];
 
     $insertSql = "INSERT INTO infraestructuras
-        (id_zona, id_unidad, cod_infoca, nombre, superficie, municipio,
+        (provincia, id_zona, id_unidad, cod_infoca, nombre, superficie, municipio,
          monte, cod_monte, pendiente, distancia_aprisco, vegetacion,
          tipo_contrato, parque, pago_max, desbroce, observaciones, activa)
         VALUES
-        (:id_zona, :id_unidad, :cod_infoca, :nombre, :superficie, :municipio,
+        (:provincia, :id_zona, :id_unidad, :cod_infoca, :nombre, :superficie, :municipio,
          :monte, :cod_monte, :pendiente, :distancia_aprisco, :vegetacion,
          :tipo_contrato, :parque, :pago_max, :desbroce, :observaciones, 1)";
 
@@ -163,6 +164,7 @@ try {
 
         try {
             $stmtInsert->execute([
+                ':provincia'         => ($data['provincia'] ?? '') ?: null,
                 ':id_zona'           => ($data['id_zona'] ?? '') ?: null,
                 ':id_unidad'         => ($data['id_unidad'] ?? '') ?: null,
                 ':cod_infoca'        => ($data['cod_infoca'] ?? '') ?: null,

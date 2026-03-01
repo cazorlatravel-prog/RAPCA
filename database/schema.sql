@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
 -- -----------------------------------------------------------
 CREATE TABLE IF NOT EXISTS infraestructuras (
     id                  INT UNSIGNED    NOT NULL AUTO_INCREMENT,
+    provincia           VARCHAR(150)    DEFAULT NULL COMMENT 'Provincia',
     id_zona             VARCHAR(50)     DEFAULT NULL COMMENT 'Identificador de zona',
     id_unidad           VARCHAR(50)     DEFAULT NULL COMMENT 'Identificador de unidad',
     cod_infoca          VARCHAR(50)     DEFAULT NULL COMMENT 'Codigo INFOCA',
@@ -54,6 +55,7 @@ CREATE TABLE IF NOT EXISTS infraestructuras (
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
+    INDEX idx_infra_provincia (provincia),
     INDEX idx_infra_zona (id_zona),
     INDEX idx_infra_cod_infoca (cod_infoca),
     INDEX idx_infra_municipio (municipio),
@@ -212,6 +214,7 @@ SELECT
     i.cod_infoca,
     i.lat_teorica,
     i.lon_teorica,
+    i.provincia     AS infra_provincia,
     i.municipio     AS infra_municipio,
     u.id            AS usuario_id,
     u.nombre        AS usuario_nombre,

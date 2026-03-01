@@ -453,7 +453,7 @@
                 }
 
                 data.infraestructuras.forEach(inf => {
-                    const loc = inf.municipio || '';
+                    const loc = [inf.municipio, inf.provincia].filter(Boolean).join(', ');
                     html += `<div class="result-item" data-id="${inf.id}" data-name="${escHtml(inf.nombre)}" data-code="${escHtml(inf.cod_infoca || '')}">
                         ${escHtml(inf.nombre)} <span class="result-code">${escHtml(inf.cod_infoca || '')}</span>
                         ${loc ? `<span class="result-location">${escHtml(loc)}</span>` : ''}

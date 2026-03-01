@@ -33,7 +33,7 @@ try {
     if ($registroId > 0) {
         // Single record PDF
         $stmt = $pdo->prepare("
-            SELECT r.*, i.nombre AS infra_nombre, i.cod_infoca, i.municipio,
+            SELECT r.*, i.nombre AS infra_nombre, i.cod_infoca, i.provincia, i.municipio,
                    u.nombre AS usuario_nombre
             FROM registros r
             JOIN infraestructuras i ON r.infra_id = i.id
@@ -136,6 +136,7 @@ th { background: #f3f4f6; font-weight: 700; color: #555; width: 30%; }
 <table>
 <tr><th>Infraestructura</th><td>{$r['infra_nombre']}</td></tr>
 <tr><th>Cód. INFOCA</th><td>{$r['cod_infoca']}</td></tr>
+<tr><th>Provincia</th><td>{$r['provincia']}</td></tr>
 <tr><th>Municipio</th><td>{$r['municipio']}</td></tr>
 <tr><th>Fecha</th><td>{$fecha}</td></tr>
 <tr><th>Operador</th><td>{$r['usuario_nombre']}</td></tr>
