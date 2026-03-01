@@ -151,6 +151,7 @@ if (CloudinaryHelper::isConfigured()) {
     } catch (\Exception $e) {
         // Cloudinary falló — guardar localmente como fallback
         $cloudinaryError = $e->getMessage();
+        error_log('[RAPCA] Cloudinary upload failed: ' . $cloudinaryError);
         $cloudinaryUrl = saveLocal($_FILES['imagen']['tmp_name'], $tipoFoto, $nombreArchivo);
 
         // Registrar fallo para que el admin lo vea

@@ -1111,7 +1111,11 @@
                 } else {
                     showScreen('ficha');
                 }
-                showNotification('Foto subida correctamente');
+                if (data.warning) {
+                    showToast(data.warning, 'warning', 6000);
+                } else {
+                    showNotification('Foto subida correctamente');
+                }
             } else {
                 showToast(data.error || 'Error desconocido', 'error');
                 showScreen(formPhotoCtx ? 'form-' + formPhotoCtx.formType : 'ficha');
