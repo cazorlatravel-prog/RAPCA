@@ -1,0 +1,21 @@
+{
+    "name": "rapca/app",
+    "description": "RAPCA - Registro y Análisis de Puntos de Control y Actuaciones. Inspección de infraestructuras con cámara, GPS y reportes PDF.",
+    "type": "project",
+    "require": {
+        "php": ">=8.1",
+        "dompdf/dompdf": "^2.0",
+        "ext-pdo": "*",
+        "ext-curl": "*",
+        "ext-json": "*",
+        "ext-fileinfo": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Rapca\\": "includes/"
+        }
+    },
+    "config": {
+        "vendor-dir": "vendor"
+    }
+}
