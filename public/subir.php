@@ -103,8 +103,41 @@ if ($infraId <= 0 || $usuarioId <= 0) {
 // 2. Subir imagen a Cloudinary (o guardar localmente si no está configurado)
 // ---------------------------------------------------------------
 $cloudinaryUrl = '';
-try {
-    if (CloudinaryHelper::isConfigured()) {
+$cloudinaryError = null;
+
+// Función auxiliar para guardar localmente
+function saveLocal(string $tmpFile, string $tipoFoto, ?string $nombreArchivo): string
+{
+    $uploadsDir = __DIR__ . '/uploads';
+    if (!is_dir($uploadsDir)) {
+        mkdir($uploadsDir, 0755, true);
+    }
+    $subDir = $tipoFoto === 'comparativo' ? 'comparativas' : 'aleatorias';
+    $targetDir = $uploadsDir . '/' . $subDir;
+    if (!is_dir($targetDir)) {
+        mkdir($targetDir, 0755, true);
+    }
+
+    $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $nombreArchivo ?: ('foto_' . time()));
+    $localFile = $safeName . '.jpg';
+    $destPath  = $targetDir . '/' . $localFile;
+
+    if (file_exists($destPath)) {
+        $localFile = $safeName . '_' . time() . '.jpg';
+        $destPath  = $targetDir . '/' . $localFile;
+    }
+
+    if (is_uploaded_file($tmpFile)) {
+        move_uploaded_file($tmpFile, $destPath);
+    } else {
+        copy($tmpFile, $destPath);
+    }
+
+    return APP_URL . '/public/uploads/' . $subDir . '/' . $localFile;
+}
+
+if (CloudinaryHelper::isConfigured()) {
+    try {
         $folder = $tipoFoto === 'comparativo'
             ? 'rapca/comparativas'
             : 'rapca/aleatorias';
@@ -115,63 +148,36 @@ try {
             $folder,
             $publicId
         );
-    } else {
-        // Cloudinary NO configurado — guardar en uploads/ local
-        $uploadsDir = __DIR__ . '/uploads';
-        if (!is_dir($uploadsDir)) {
-            mkdir($uploadsDir, 0755, true);
+    } catch (\Exception $e) {
+        // Cloudinary falló — guardar localmente como fallback
+        $cloudinaryError = $e->getMessage();
+        $cloudinaryUrl = saveLocal($_FILES['imagen']['tmp_name'], $tipoFoto, $nombreArchivo);
+
+        // Registrar fallo para que el admin lo vea
+        try {
+            $pdo = getDB();
+            $tableCheck = $pdo->query("SHOW TABLES LIKE 'subidas_fallidas'")->fetchColumn();
+            if ($tableCheck) {
+                $failStmt = $pdo->prepare(
+                    "INSERT INTO subidas_fallidas (usuario_id, infra_id, nombre_archivo, estado_incidencia, tipo_foto, motivo_error)
+                     VALUES (:usr, :infra, :nombre, :estado, :tipo, :motivo)"
+                );
+                $failStmt->execute([
+                    ':usr'    => $usuarioId,
+                    ':infra'  => $infraId,
+                    ':nombre' => $nombreArchivo,
+                    ':estado' => $incidencia,
+                    ':tipo'   => $tipoFoto,
+                    ':motivo' => 'Cloudinary falló, guardada localmente. Error: ' . $cloudinaryError,
+                ]);
+            }
+        } catch (\Exception $logErr) {
+            // Silenciar
         }
-        $subDir = $tipoFoto === 'comparativo' ? 'comparativas' : 'aleatorias';
-        $targetDir = $uploadsDir . '/' . $subDir;
-        if (!is_dir($targetDir)) {
-            mkdir($targetDir, 0755, true);
-        }
-
-        $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $nombreArchivo ?: ('foto_' . time()));
-        $localFile = $safeName . '.jpg';
-        $destPath  = $targetDir . '/' . $localFile;
-
-        // Evitar sobrescribir
-        if (file_exists($destPath)) {
-            $localFile = $safeName . '_' . time() . '.jpg';
-            $destPath  = $targetDir . '/' . $localFile;
-        }
-
-        move_uploaded_file($_FILES['imagen']['tmp_name'], $destPath);
-
-        $cloudinaryUrl = APP_URL . '/uploads/' . $subDir . '/' . $localFile;
     }
-} catch (\Exception $e) {
-    // Registrar la subida fallida para notificar al admin
-    try {
-        $pdo = getDB();
-        $tableCheck = $pdo->query("SHOW TABLES LIKE 'subidas_fallidas'")->fetchColumn();
-        if ($tableCheck) {
-            $failStmt = $pdo->prepare(
-                "INSERT INTO subidas_fallidas (usuario_id, infra_id, nombre_archivo, estado_incidencia, tipo_foto, motivo_error)
-                 VALUES (:usr, :infra, :nombre, :estado, :tipo, :motivo)"
-            );
-            $failStmt->execute([
-                ':usr'    => $usuarioId,
-                ':infra'  => $infraId,
-                ':nombre' => $nombreArchivo,
-                ':estado' => $incidencia,
-                ':tipo'   => $tipoFoto,
-                ':motivo' => $e->getMessage(),
-            ]);
-        }
-    } catch (\Exception $logErr) {
-        // Silenciar error de logging para no enmascarar el original
-    }
-
-    http_response_code(500);
-    echo json_encode([
-        'ok' => false,
-        'error' => 'Error al subir imagen: ' . $e->getMessage(),
-        'upload_failed' => true,
-        'keep_photo' => true,
-    ]);
-    exit;
+} else {
+    // Cloudinary NO configurado — guardar localmente
+    $cloudinaryUrl = saveLocal($_FILES['imagen']['tmp_name'], $tipoFoto, $nombreArchivo);
 }
 
 // ---------------------------------------------------------------
@@ -227,11 +233,15 @@ try {
         }
     }
 
-    echo json_encode([
+    $response = [
         'ok'          => true,
         'registro_id' => $registroId,
         'url_imagen'  => $cloudinaryUrl,
-    ]);
+    ];
+    if ($cloudinaryError) {
+        $response['warning'] = 'Foto guardada localmente (Cloudinary no disponible)';
+    }
+    echo json_encode($response);
 
 } catch (\PDOException $e) {
     http_response_code(500);
