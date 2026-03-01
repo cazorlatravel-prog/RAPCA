@@ -31,7 +31,7 @@
         countComparativas: 0,
         countTotal: 0, // contador global por infraestructura
         prevPhotos: [], // fotos comparativas de visita anterior
-        situacionIdx: 0, // 0=antes, 1=durante, 2=despues
+        situacionIdx: 0, // 0=vp, 1=ev
         // Annotation
         annotation: null,          // { x, y, text, radius } — canvas pixel coords
         annotationMode: false,
@@ -39,8 +39,8 @@
         baseImageData: null,       // ImageData snapshot without annotation
     };
 
-    const SITUACIONES = ['antes', 'durante', 'despues'];
-    const SITUACIONES_UI = ['ANTES', 'DURANTE', 'DESPUÉS'];
+    const SITUACIONES = ['vp', 'ev'];
+    const SITUACIONES_UI = ['VP', 'EV'];
 
     // ===================================================================
     // DOM REFS
@@ -812,8 +812,8 @@
         camVideo.pause();
 
         // Generate filename: NombreInfra_ALE_ANT_001 or NombreInfra_COMP_DUR_002
-        const sitCodes = { antes: 'ANT', durante: 'DUR', despues: 'DES' };
-        const sitCode = sitCodes[SITUACIONES[state.situacionIdx]] || 'ANT';
+        const sitCodes = { vp: 'VP', ev: 'EV' };
+        const sitCode = sitCodes[SITUACIONES[state.situacionIdx]] || 'VP';
         const modeCode = state.currentMode === 'comparativo' ? 'COMP' : 'ALE';
 
         state.countTotal++;
@@ -1667,7 +1667,7 @@
 
             const bounds = [];
             const stateColors = {
-                'antes': '#3b82f6', 'durante': '#f59e0b', 'despues': '#22c55e',
+                'vp': '#3b82f6', 'ev': '#f59e0b',
             };
 
             Object.values(allInfras).forEach(infra => {
@@ -1678,7 +1678,7 @@
 
                 if (hasPhotos) {
                     // Visited: colored circle with photo count
-                    const lastState = infra.registros[0]?.estado_incidencia || 'antes';
+                    const lastState = infra.registros[0]?.estado_incidencia || 'vp';
                     const color = stateColors[lastState] || '#9ca3af';
                     const numPhotos = infra.registros.length;
 
@@ -2604,7 +2604,7 @@
         // 2. Determine situación from the most recent photo
         if (visita.fotos && visita.fotos.length > 0) {
             const lastFoto = visita.fotos[0]; // fotos are ordered by most recent first
-            const sitMap = { antes: 0, durante: 1, despues: 2 };
+            const sitMap = { vp: 0, ev: 1 };
             const sitIdx = sitMap[lastFoto.estado] !== undefined ? sitMap[lastFoto.estado] : 0;
             state.situacionIdx = sitIdx;
 
@@ -2717,7 +2717,7 @@
                 ${r.nombre_archivo ? ' - ' + escHtml(r.nombre_archivo) : ''}
             `;
 
-            editarEstado.value = r.estado_incidencia || 'antes';
+            editarEstado.value = r.estado_incidencia || 'vp';
             editarObs.value = r.observaciones || '';
 
             // Load UO options
@@ -3019,7 +3019,7 @@
                 hour: '2-digit', minute: '2-digit',
             });
             const tipoClass = r.tipo_foto === 'comparativo' ? 'comparativo' : 'aleatorio';
-            const estadoClass = r.estado_incidencia || 'antes';
+            const estadoClass = r.estado_incidencia || 'vp';
 
             html += `<div class="panel-record" data-id="${r.id}">
                 <img class="panel-record-thumb" src="${escHtml(r.url_cloudinary || '')}" alt="" loading="lazy">
@@ -3028,7 +3028,7 @@
                     <div class="panel-record-meta">${fecha} · ${escHtml(r.usuario_nombre || '')}</div>
                     <div class="panel-record-badges">
                         <span class="panel-badge panel-badge--${tipoClass}">${r.tipo_foto === 'comparativo' ? 'COMP' : 'ALEA'}</span>
-                        <span class="panel-badge panel-badge--${estadoClass}">${(r.estado_incidencia || 'antes').toUpperCase()}</span>
+                        <span class="panel-badge panel-badge--${estadoClass}">${(r.estado_incidencia || 'vp').toUpperCase()}</span>
                     </div>
                 </div>
                 <div class="panel-record-actions">

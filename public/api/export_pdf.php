@@ -107,7 +107,7 @@ try {
 function buildSingleRecordHtml(array $r): string
 {
     $fecha = date('d/m/Y H:i', strtotime($r['fecha']));
-    $estado = strtoupper($r['estado_incidencia'] ?? 'antes');
+    $estado = strtoupper($r['estado_incidencia'] ?? 'vp');
     $tipo = $r['tipo_foto'] === 'comparativo' ? 'Comparativa' : 'Aleatoria';
     $seq = $r['secuencia_comparativa'] ? 'W' . $r['secuencia_comparativa'] : '';
     $coords = ($r['lat_real'] && $r['lon_real'])
@@ -127,9 +127,8 @@ table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
 th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 11px; }
 th { background: #f3f4f6; font-weight: 700; color: #555; width: 30%; }
 .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 10px; font-weight: 700; }
-.badge-antes { background: #dbeafe; color: #2563eb; }
-.badge-durante { background: #fef3c7; color: #b45309; }
-.badge-despues { background: #dcfce7; color: #166534; }
+.badge-vp { background: #dbeafe; color: #2563eb; }
+.badge-ev { background: #fef3c7; color: #b45309; }
 .badge-alea { background: #dbeafe; color: #1d4ed8; }
 .badge-comp { background: #ede9fe; color: #6d28d9; }
 .footer { margin-top: 30px; font-size: 9px; color: #aaa; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 10px; }
@@ -167,7 +166,7 @@ function buildAllRecordsHtml(array $records, int $userId): string
         $fecha = date('d/m/Y H:i', strtotime($r['fecha']));
         $estado = strtoupper($r['estado_incidencia'] ?? '');
         $tipo = $r['tipo_foto'] === 'comparativo' ? 'COMP' : 'ALEA';
-        $estadoClass = $r['estado_incidencia'] ?? 'antes';
+        $estadoClass = $r['estado_incidencia'] ?? 'vp';
         $tipoClass = $r['tipo_foto'] ?? 'aleatorio';
         $rows .= "<tr>
             <td>{$n}</td>
@@ -194,9 +193,8 @@ table { width: 100%; border-collapse: collapse; }
 th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 10px; }
 th { background: #f3f4f6; font-weight: 700; color: #555; }
 .badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 9px; font-weight: 700; }
-.badge-antes { background: #dbeafe; color: #2563eb; }
-.badge-durante { background: #fef3c7; color: #b45309; }
-.badge-despues { background: #dcfce7; color: #166534; }
+.badge-vp { background: #dbeafe; color: #2563eb; }
+.badge-ev { background: #fef3c7; color: #b45309; }
 .badge-aleatorio { background: #dbeafe; color: #1d4ed8; }
 .badge-comparativo { background: #ede9fe; color: #6d28d9; }
 .footer { margin-top: 20px; font-size: 9px; color: #aaa; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 8px; }

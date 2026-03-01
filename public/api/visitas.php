@@ -146,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         if (isset($_POST['estado_incidencia'])) {
             $estado = $_POST['estado_incidencia'];
-            if (in_array($estado, ['antes', 'durante', 'despues'], true)) {
+            if (in_array($estado, ['vp', 'ev'], true)) {
                 $updates[] = 'estado_incidencia = :estado';
                 $params[':estado'] = $estado;
             }

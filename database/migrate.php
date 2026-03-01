@@ -52,6 +52,29 @@ try {
         }
     }
 
+    // --- Pre-migration: change estado_incidencia ENUM from antes/durante/despues to vp/ev ---
+    try {
+        $pdo->exec("ALTER TABLE registros MODIFY COLUMN estado_incidencia ENUM('vp','ev') NOT NULL DEFAULT 'vp'");
+        echo "<span class='ok'>[OK]</span> ENUM estado_incidencia actualizado en registros (vp/ev)\n";
+    } catch (PDOException $e) {
+        if (str_contains($e->getMessage(), "doesn't exist")) {
+            echo "<span class='info'>[INFO]</span> Tabla registros no existe aún, se creará con schema.sql\n";
+        } else {
+            echo "<span class='warn'>[WARN]</span> ALTER registros.estado_incidencia: " . $e->getMessage() . "\n";
+        }
+    }
+
+    try {
+        $pdo->exec("ALTER TABLE subidas_fallidas MODIFY COLUMN estado_incidencia ENUM('vp','ev') DEFAULT 'vp'");
+        echo "<span class='ok'>[OK]</span> ENUM estado_incidencia actualizado en subidas_fallidas (vp/ev)\n";
+    } catch (PDOException $e) {
+        if (str_contains($e->getMessage(), "doesn't exist")) {
+            echo "<span class='info'>[INFO]</span> Tabla subidas_fallidas no existe aún, se creará con schema.sql\n";
+        } else {
+            echo "<span class='warn'>[WARN]</span> ALTER subidas_fallidas.estado_incidencia: " . $e->getMessage() . "\n";
+        }
+    }
+
     $sqlFile = __DIR__ . '/schema.sql';
     if (!file_exists($sqlFile)) {
         echo "<span class='error'>[ERROR]</span> schema.sql no encontrado\n";

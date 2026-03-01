@@ -97,8 +97,8 @@ CREATE TABLE IF NOT EXISTS registros (
     lon_real                DECIMAL(10,7)   NOT NULL COMMENT 'Longitud GPS real del operador',
     url_cloudinary          VARCHAR(512)    NOT NULL COMMENT 'URL de la imagen en Cloudinary',
     datos_tecnicos          JSON            DEFAULT NULL COMMENT 'Payload libre: temperatura, presion, notas...',
-    estado_incidencia       ENUM('antes','durante','despues')
-                                            NOT NULL DEFAULT 'antes',
+    estado_incidencia       ENUM('vp','ev')
+                                            NOT NULL DEFAULT 'vp',
     observaciones           TEXT            DEFAULT NULL,
     tipo_foto               ENUM('aleatorio','comparativo') NOT NULL DEFAULT 'aleatorio',
     secuencia_comparativa   INT UNSIGNED    DEFAULT NULL,
@@ -168,7 +168,7 @@ CREATE TABLE IF NOT EXISTS subidas_fallidas (
     usuario_id          INT UNSIGNED    NOT NULL,
     infra_id            INT UNSIGNED    NOT NULL,
     nombre_archivo      VARCHAR(255),
-    estado_incidencia   ENUM('antes','durante','despues') DEFAULT 'antes',
+    estado_incidencia   ENUM('vp','ev') DEFAULT 'vp',
     tipo_foto           ENUM('aleatorio','comparativo') DEFAULT 'aleatorio',
     motivo_error        TEXT,
     intentos            INT UNSIGNED    DEFAULT 1,

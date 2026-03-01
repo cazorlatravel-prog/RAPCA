@@ -136,9 +136,8 @@ if ($initials === '') $initials = 'OP';
             <div class="card">
                 <div class="card-label"><i class="bi bi-flag-fill"></i> Situación de la obra</div>
                 <div class="situacion-selector" id="situacion-selector">
-                    <button type="button" class="situacion-option active" data-sit="0"><i class="bi bi-clock"></i> Antes</button>
-                    <button type="button" class="situacion-option" data-sit="1"><i class="bi bi-exclamation-triangle"></i> Durante</button>
-                    <button type="button" class="situacion-option" data-sit="2"><i class="bi bi-check-circle"></i> Después</button>
+                    <button type="button" class="situacion-option active" data-sit="0"><i class="bi bi-eye"></i> VP (Visita Previa)</button>
+                    <button type="button" class="situacion-option" data-sit="1"><i class="bi bi-clipboard-check"></i> EV (Evaluación)</button>
                 </div>
             </div>
 
@@ -316,7 +315,7 @@ if ($initials === '') $initials = 'OP';
             <div class="card" style="margin:12px 16px;">
                 <div class="card-label"><i class="bi bi-flag"></i> Situación</div>
                 <select id="editar-estado" class="input-field">
-                    <option value="antes">Antes</option><option value="durante">Durante</option><option value="despues">Después</option>
+                    <option value="vp">VP (Visita Previa)</option><option value="ev">EV (Evaluación)</option>
                 </select>
             </div>
             <div class="card" style="margin:12px 16px;">
@@ -354,9 +353,8 @@ if ($initials === '') $initials = 'OP';
             </select>
             <select id="panel-filter-estado" class="input-field input-field--sm">
                 <option value="">Estado: Todos</option>
-                <option value="antes">Antes</option>
-                <option value="durante">Durante</option>
-                <option value="despues">Después</option>
+                <option value="vp">VP (Visita Previa)</option>
+                <option value="ev">EV (Evaluación)</option>
             </select>
             <div class="panel-actions-row">
                 <button type="button" id="btn-export-excel" class="panel-action-btn panel-action--excel"><i class="bi bi-file-earmark-spreadsheet"></i> Excel</button>
@@ -410,9 +408,8 @@ if ($initials === '') $initials = 'OP';
                 <label class="modal-label">Estado</label>
                 <select id="export-filter-estado" class="input-field">
                     <option value="">Todos</option>
-                    <option value="antes">Antes</option>
-                    <option value="durante">Durante</option>
-                    <option value="despues">Después</option>
+                    <option value="vp">VP (Visita Previa)</option>
+                    <option value="ev">EV (Evaluación)</option>
                 </select>
                 <label class="modal-label">Año</label>
                 <select id="export-filter-year" class="input-field">

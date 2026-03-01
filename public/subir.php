@@ -8,7 +8,7 @@
  *   - usuario_id   : ID del usuario operador
  *   - lat_real     : latitud GPS real
  *   - lon_real     : longitud GPS real
- *   - estado_incidencia : antes | durante | despues
+ *   - estado_incidencia : vp | ev
  *   - datos_tecnicos    : JSON string
  *   - observaciones     : texto libre
  */
@@ -62,7 +62,7 @@ $infraId     = (int) $_POST['infra_id'];
 $usuarioId   = (int) $_POST['usuario_id'];
 $latReal     = (float) $_POST['lat_real'];
 $lonReal     = (float) $_POST['lon_real'];
-$incidencia  = $_POST['estado_incidencia'] ?? 'antes';
+$incidencia  = $_POST['estado_incidencia'] ?? 'vp';
 $observaciones = isset($_POST['observaciones']) ? trim((string)$_POST['observaciones']) : null;
 $datosTecnicos = isset($_POST['datos_tecnicos']) ? $_POST['datos_tecnicos'] : null;
 
@@ -73,9 +73,9 @@ $nombreArchivo         = isset($_POST['nombre_archivo']) ? trim((string) $_POST[
 $unidadObraId          = isset($_POST['unidad_obra_id']) && $_POST['unidad_obra_id'] !== '' ? (int) $_POST['unidad_obra_id'] : null;
 
 // Validar enum de situación
-$situacionesPermitidas = ['antes', 'durante', 'despues'];
+$situacionesPermitidas = ['vp', 'ev'];
 if (!in_array($incidencia, $situacionesPermitidas, true)) {
-    $incidencia = 'antes';
+    $incidencia = 'vp';
 }
 
 // Validar tipo de foto

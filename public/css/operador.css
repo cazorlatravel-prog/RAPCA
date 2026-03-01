@@ -973,9 +973,8 @@ select.input-field {
     transform: scale(0.95);
 }
 
-.cam-situacion-btn.sit-antes { border-color: #60a5fa; color: #93c5fd; }
-.cam-situacion-btn.sit-durante { border-color: #fbbf24; color: #fde68a; }
-.cam-situacion-btn.sit-despues { border-color: #4ade80; color: #86efac; }
+.cam-situacion-btn.sit-vp { border-color: #60a5fa; color: #93c5fd; }
+.cam-situacion-btn.sit-ev { border-color: #fbbf24; color: #fde68a; }
 
 /* Camera controls */
 .cam-controls {
@@ -1429,9 +1428,8 @@ select.input-field {
     text-transform: uppercase;
 }
 
-.estado-badge.antes { background: #e0edff; color: #2563eb; }
-.estado-badge.durante { background: #fff8e1; color: #b8860b; }
-.estado-badge.despues { background: #e8faf0; color: #0d9f5f; }
+.estado-badge.vp { background: #e0edff; color: #2563eb; }
+.estado-badge.ev { background: #fff8e1; color: #b8860b; }
 
 .mapa-detail-meta {
     font-size: 0.72rem;
@@ -2423,9 +2421,8 @@ select.input-field {
     text-transform: uppercase;
     color: #fff;
 }
-.visita-foto-badge.antes { background: #3b82f6; }
-.visita-foto-badge.durante { background: #f59e0b; }
-.visita-foto-badge.despues { background: #22c55e; }
+.visita-foto-badge.vp { background: #3b82f6; }
+.visita-foto-badge.ev { background: #f59e0b; }
 
 .visita-foto-tipo {
     position: absolute;
@@ -2741,9 +2738,8 @@ select.input-field {
 }
 .panel-badge--aleatorio { background: #dbeafe; color: #1d4ed8; }
 .panel-badge--comparativo { background: #ede9fe; color: #6d28d9; }
-.panel-badge--antes  { background: #dbeafe; color: #2563eb; }
-.panel-badge--durante { background: #fef3c7; color: #b45309; }
-.panel-badge--despues { background: #dcfce7; color: #166534; }
+.panel-badge--vp  { background: #dbeafe; color: #2563eb; }
+.panel-badge--ev { background: #fef3c7; color: #b45309; }
 .panel-record-actions {
     display: flex;
     flex-direction: column;
