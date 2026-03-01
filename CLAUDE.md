@@ -25,8 +25,7 @@ Dominio: **rapca.app** | Hosting: **Hostinger** | BD: **u919343704_rapcajaen**
 
 ```
 RAPCA/
-├── CLAUDE.md                 # Instrucciones para IA
-├── rapca_md.md               # Este archivo - documentacion completa
+├── CLAUDE.md                 # Este archivo - documentacion completa para IA
 ├── composer.json             # Dependencias PHP (dompdf, phpspreadsheet)
 ├── composer.lock
 ├── index.html                # Landing page (infocampo)
