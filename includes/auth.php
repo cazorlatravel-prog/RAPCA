@@ -112,11 +112,61 @@ function csrfField(): string
 }
 
 /**
+ * Comprobar si el usuario actual es superadmin.
+ */
+function isSuperAdmin(): bool
+{
+    return ($_SESSION['user_rol'] ?? '') === 'superadmin';
+}
+
+/**
+ * Comprobar si el usuario actual es admin (solo lectura).
+ * Los admins pueden ver todo pero no modificar datos.
+ */
+function isAdmin(): bool
+{
+    return ($_SESSION['user_rol'] ?? '') === 'admin';
+}
+
+/**
+ * Comprobar si el rol actual es de solo lectura (admin).
+ * Superadmin y operadores pueden escribir, admin no.
+ */
+function isReadOnly(): bool
+{
+    return isAdmin();
+}
+
+/**
+ * Comprobar si el usuario puede realizar operaciones de escritura.
+ * Superadmin: sí (todo). Operador: sí (su ámbito). Admin: no.
+ */
+function canWrite(): bool
+{
+    $rol = $_SESSION['user_rol'] ?? '';
+    return in_array($rol, ['superadmin', 'operador'], true);
+}
+
+/**
  * Obtener los IDs de infraestructuras a las que un operador tiene acceso.
+ * Superadmin y admin ven todas las infraestructuras.
  */
 function getOperadorInfraIds(int $usuarioId): array
 {
     $pdo = getDB();
+
+    // Superadmin y admin ven todas
+    $stmt = $pdo->prepare("SELECT rol FROM usuarios WHERE id = :uid");
+    $stmt->execute([':uid' => $usuarioId]);
+    $user = $stmt->fetch();
+
+    if ($user && in_array($user['rol'], ['superadmin', 'admin'], true)) {
+        return array_column(
+            $pdo->query("SELECT id FROM infraestructuras WHERE activa = 1")->fetchAll(),
+            'id'
+        );
+    }
+
     $stmt = $pdo->prepare(
         "SELECT infraestructura_id FROM operario_infraestructura WHERE usuario_id = :uid"
     );

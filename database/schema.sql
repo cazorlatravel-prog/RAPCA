@@ -8,14 +8,14 @@ SET FOREIGN_KEY_CHECKS = 0;
 
 -- -----------------------------------------------------------
 -- 1. USUARIOS
---    Roles: admin (gestión total), operador (trabajo de campo)
+--    Roles: superadmin (control total), admin (solo lectura), operador (campo)
 -- -----------------------------------------------------------
 CREATE TABLE IF NOT EXISTS usuarios (
     id              INT UNSIGNED    NOT NULL AUTO_INCREMENT,
     nombre          VARCHAR(150)    NOT NULL,
     email           VARCHAR(255)    NOT NULL,
     password        VARCHAR(255)    NOT NULL COMMENT 'Hash bcrypt',
-    rol             ENUM('admin','operador')
+    rol             ENUM('superadmin','admin','operador')
                                     NOT NULL DEFAULT 'operador',
     activo          TINYINT(1)      NOT NULL DEFAULT 1,
     ultimo_login    DATETIME        DEFAULT NULL,
@@ -227,12 +227,28 @@ FROM registros r
     INNER JOIN usuarios u         ON r.usuario_id = u.id;
 
 -- -----------------------------------------------------------
--- Seed: Administrador por defecto
--- Password: Rapca2024!
+-- Seed: Usuarios iniciales
 -- -----------------------------------------------------------
+
+-- Super Administrador (rapcajaen@gmail.com / Gallito9431)
+INSERT IGNORE INTO usuarios (nombre, email, password, rol, activo)
+VALUES ('Super Administrador', 'rapcajaen@gmail.com',
+        '$2y$12$qc6Hzv1Fi2def71Yd6meEe33rh1b/Drv2d6fKXvqKyJ9m9qTt9JOe',
+        'superadmin', 1);
+
+-- Administrador (solo lectura)
 INSERT IGNORE INTO usuarios (nombre, email, password, rol, activo)
 VALUES ('Administrador', 'admin@rapca.app',
         '$2y$12$LJ3b9FzGO8HnKNQPbQqXkeKdBkYvHZVx5Y1w6xQmR/Ll.hPGXOJOy',
         'admin', 1);
+
+-- 6 Operadores de campo
+INSERT IGNORE INTO usuarios (nombre, email, password, rol, activo) VALUES
+('Operador 1', 'operador1@rapca.app', '$2y$12$LJ3b9FzGO8HnKNQPbQqXkeKdBkYvHZVx5Y1w6xQmR/Ll.hPGXOJOy', 'operador', 1),
+('Operador 2', 'operador2@rapca.app', '$2y$12$LJ3b9FzGO8HnKNQPbQqXkeKdBkYvHZVx5Y1w6xQmR/Ll.hPGXOJOy', 'operador', 1),
+('Operador 3', 'operador3@rapca.app', '$2y$12$LJ3b9FzGO8HnKNQPbQqXkeKdBkYvHZVx5Y1w6xQmR/Ll.hPGXOJOy', 'operador', 1),
+('Operador 4', 'operador4@rapca.app', '$2y$12$LJ3b9FzGO8HnKNQPbQqXkeKdBkYvHZVx5Y1w6xQmR/Ll.hPGXOJOy', 'operador', 1),
+('Operador 5', 'operador5@rapca.app', '$2y$12$LJ3b9FzGO8HnKNQPbQqXkeKdBkYvHZVx5Y1w6xQmR/Ll.hPGXOJOy', 'operador', 1),
+('Operador 6', 'operador6@rapca.app', '$2y$12$LJ3b9FzGO8HnKNQPbQqXkeKdBkYvHZVx5Y1w6xQmR/Ll.hPGXOJOy', 'operador', 1);
 
 SET FOREIGN_KEY_CHECKS = 1;

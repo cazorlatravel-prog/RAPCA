@@ -40,6 +40,18 @@ try {
     $pdo = getDB();
     echo "<span class='ok'>[OK]</span> Conexión establecida\n\n";
 
+    // --- Pre-migration: add superadmin role if table already exists ---
+    try {
+        $pdo->exec("ALTER TABLE usuarios MODIFY COLUMN rol ENUM('superadmin','admin','operador') NOT NULL DEFAULT 'operador'");
+        echo "<span class='ok'>[OK]</span> Rol 'superadmin' añadido al ENUM de usuarios\n";
+    } catch (PDOException $e) {
+        if (str_contains($e->getMessage(), "doesn't exist")) {
+            echo "<span class='info'>[INFO]</span> Tabla usuarios no existe aún, se creará con schema.sql\n";
+        } else {
+            echo "<span class='warn'>[WARN]</span> ALTER usuarios: " . $e->getMessage() . "\n";
+        }
+    }
+
     $sqlFile = __DIR__ . '/schema.sql';
     if (!file_exists($sqlFile)) {
         echo "<span class='error'>[ERROR]</span> schema.sql no encontrado\n";

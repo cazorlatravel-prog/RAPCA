@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RAPCA - Tu APP de recogida de datos en Campo</title>
-    <meta name="description" content="RAPCA - Plataforma SaaS de inspecciones en campo. Fotos geolocalizadas con watermark GPS, anotaciones en foto con círculo ajustable, navegación con alertas de proximidad, capas WMS (Ortofoto, Topográfico), ghosting comparativo, capas KML, informes PDF, exportación CSV y modo offline.">
+    <meta name="description" content="RAPCA - Plataforma de inspecciones en campo. Fotos geolocalizadas con watermark GPS, anotaciones en foto con círculo ajustable, navegación con alertas de proximidad, capas WMS (Ortofoto, Topográfico), ghosting comparativo, capas KML, informes PDF, exportación CSV y modo offline.">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
@@ -754,7 +754,7 @@
                 <div class="hero-content">
                     <div class="hero-badge">
                         <div class="hero-badge-dot"></div>
-                        Plataforma SaaS de Inspecciones en Campo
+                        Plataforma de Inspecciones en Campo
                     </div>
                     <h1>
                         Inspecciones de campo<br>
@@ -995,47 +995,35 @@
     <section class="section" id="plataforma">
         <div class="container">
             <div class="section-label reveal"><i class="bi bi-building-fill"></i> Plataforma</div>
-            <h2 class="section-title reveal">Arquitectura multi-empresa segura</h2>
+            <h2 class="section-title reveal">Arquitectura robusta y segura</h2>
             <p class="section-desc reveal">
-                Plataforma SaaS con aislamiento total de datos por empresa, gestión de licencias
-                y configuración personalizada por tenant.
+                Plataforma diseñada para trabajo de campo con gestión de roles,
+                seguridad avanzada y campos personalizables.
             </p>
 
             <div class="features-grid">
                 <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--amber"><i class="bi bi-buildings"></i></div>
-                    <h3>Multi-Tenant (SaaS)</h3>
-                    <p>Cada empresa opera en su propio espacio aislado. Operadores, infraestructuras, fotos y reportes son completamente independientes entre compañías.</p>
+                    <div class="feature-icon feature-icon--teal"><i class="bi bi-shield-check"></i></div>
+                    <h3>Seguridad y Roles</h3>
+                    <p>Tres niveles de acceso: Super Administrador (control total), Administrador (solo lectura) y Operador (campo). Protección CSRF y contraseñas cifradas con bcrypt.</p>
                 </div>
 
                 <div class="feature-card reveal">
                     <div class="feature-icon feature-icon--rose"><i class="bi bi-ui-checks-grid"></i></div>
                     <h3>Formularios Dinámicos</h3>
-                    <p>Configura campos personalizados por empresa: textos, selectores, checkboxes, fechas y más. Cada operador ve solo los campos de su compañía.</p>
+                    <p>Configura campos personalizados: textos, selectores, checkboxes, fechas y más. Cada registro puede llevar datos técnicos adicionales según necesidad.</p>
                 </div>
 
                 <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--teal"><i class="bi bi-shield-check"></i></div>
-                    <h3>Seguridad y Roles</h3>
-                    <p>Cuatro niveles de acceso (superadmin, admin, supervisor, operador) con protección CSRF, contraseñas cifradas con bcrypt y aislamiento total de datos.</p>
-                </div>
-
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--blue"><i class="bi bi-key-fill"></i></div>
-                    <h3>Gestión de Licencias</h3>
-                    <p>Control de suscripciones por empresa con planes (free, pro, enterprise), límites de usuarios e infraestructuras y fechas de vigencia de licencia.</p>
-                </div>
-
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--purple"><i class="bi bi-people-fill"></i></div>
-                    <h3>Impersonación de Usuarios</h3>
-                    <p>El super administrador puede ver la aplicación como cualquier usuario para dar soporte técnico sin necesidad de conocer sus credenciales.</p>
+                    <div class="feature-icon feature-icon--amber"><i class="bi bi-people-fill"></i></div>
+                    <h3>Gestión de Operadores</h3>
+                    <p>Asigna infraestructuras específicas a cada operador. Control total de quién accede a qué zona de trabajo con permisos individuales.</p>
                 </div>
 
                 <div class="feature-card reveal">
                     <div class="feature-icon feature-icon--green"><i class="bi bi-database-fill-gear"></i></div>
-                    <h3>Migraciones Automáticas</h3>
-                    <p>Sistema de migraciones incrementales con SQL idempotente. Actualiza el esquema de base de datos sin perder datos existentes ni interrumpir el servicio.</p>
+                    <h3>Base de datos MySQL</h3>
+                    <p>Esquema optimizado con registros geolocalizados, campos dinámicos, historial de visitas y trazabilidad completa de cada inspección.</p>
                 </div>
             </div>
         </div>
@@ -1139,8 +1127,8 @@
                 <!-- Admin -->
                 <div class="access-card access-card--admin reveal">
                     <div class="access-icon"><i class="bi bi-speedometer2"></i></div>
-                    <h3>Administrador de Empresa</h3>
-                    <p>Panel completo de gestión, análisis visual y generación de informes.</p>
+                    <h3>Administrador</h3>
+                    <p>Visualización completa de datos, análisis e informes. Acceso de solo lectura.</p>
                     <ul class="access-features">
                         <li><i class="bi bi-check-circle-fill"></i> Dashboard con métricas y gráficos</li>
                         <li><i class="bi bi-check-circle-fill"></i> Timeline y galería de inspecciones</li>
@@ -1148,9 +1136,9 @@
                         <li><i class="bi bi-check-circle-fill"></i> Comparador de fotos side-by-side</li>
                         <li><i class="bi bi-check-circle-fill"></i> Informes PDF y exportación CSV</li>
                         <li><i class="bi bi-check-circle-fill"></i> Descarga masiva de fotos en ZIP</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Reubicar infraestructuras con drag & drop</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Vista de todas las infraestructuras</li>
                         <li><i class="bi bi-check-circle-fill"></i> Búsqueda global con Ctrl+K</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Gestión de infraestructuras y usuarios</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Solo lectura (no modifica datos)</li>
                     </ul>
                     <a href="/admin/login.php" class="access-btn">
                         <i class="bi bi-box-arrow-in-right"></i> Panel de Administración
@@ -1161,14 +1149,14 @@
                 <div class="access-card access-card--super reveal">
                     <div class="access-icon"><i class="bi bi-shield-lock-fill"></i></div>
                     <h3>Super Administrador</h3>
-                    <p>Gestión global de la plataforma, empresas y configuración.</p>
+                    <p>Control total de la plataforma, usuarios e infraestructuras.</p>
                     <ul class="access-features">
-                        <li><i class="bi bi-check-circle-fill"></i> Gestión de empresas y licencias</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Administración global de usuarios</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Constructor de formularios dinámicos</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Impersonación de usuarios (soporte)</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Métricas globales de la plataforma</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Control de planes y vigencia</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Gestión completa de usuarios</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Crear y editar infraestructuras</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Asignar operadores a infraestructuras</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Configurar campos dinámicos</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Acceso a todos los registros y fotos</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Informes PDF y exportación CSV</li>
                     </ul>
                     <a href="/superadmin/" class="access-btn">
                         <i class="bi bi-gear"></i> Panel Super Admin
