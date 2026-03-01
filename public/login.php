@@ -1,6 +1,6 @@
 <?php
 /**
- * RAPCA - Login de Operador de Campo
+ * RAPCA - Login unificado (todos los roles)
  */
 
 declare(strict_types=1);
@@ -20,6 +20,10 @@ if (isLoggedIn()) {
         exit;
     }
     if ($rol === 'admin') {
+        header('Location: /admin/dashboard.php');
+        exit;
+    }
+    if ($rol === 'superadmin') {
         header('Location: /admin/dashboard.php');
         exit;
     }
@@ -45,6 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($rol === 'admin') {
                 header('Location: /admin/dashboard.php');
                 exit;
+            } elseif ($rol === 'superadmin') {
+                header('Location: /admin/dashboard.php');
+                exit;
             } else {
                 logout();
                 $error = 'Rol de usuario no reconocido.';
@@ -58,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAPCA - Acceso Operador de Campo</title>
+    <title>RAPCA - Acceso</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
@@ -108,9 +115,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <div class="login-card">
         <div class="login-header">
-            <div class="icon-circle"><i class="bi bi-phone-fill"></i></div>
-            <h1><i class="bi bi-geo-alt-fill me-2"></i>RAPCA</h1>
-            <p>Acceso Operador de Campo</p>
+            <div class="icon-circle"><i class="bi bi-geo-alt-fill"></i></div>
+            <h1>RAPCA</h1>
+            <p>Registro y Análisis de Puntos de Control</p>
         </div>
         <div class="login-body">
             <?php if ($error): ?>
@@ -131,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label for="password"><i class="bi bi-lock me-1"></i> Contraseña</label>
                 </div>
                 <button type="submit" class="btn btn-login mt-2">
-                    <i class="bi bi-camera me-1"></i> Acceder como Operador
+                    <i class="bi bi-box-arrow-in-right me-1"></i> Acceder
                 </button>
             </form>
         </div>
