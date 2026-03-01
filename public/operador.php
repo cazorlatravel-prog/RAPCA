@@ -89,7 +89,7 @@ if ($initials === '') $initials = 'OP';
             <div class="card">
                 <div class="card-label"><i class="bi bi-pin-map-fill"></i> Ubicacion</div>
                 <div class="filter-row">
-                    <select id="filter-provincia" class="input-field"><option value="">Todas las provincias</option></select>
+                    <select id="filter-zona" class="input-field"><option value="">Todas las zonas</option></select>
                     <select id="filter-municipio" class="input-field" disabled><option value="">Todos los municipios</option></select>
                 </div>
             </div>
@@ -114,11 +114,6 @@ if ($initials === '') $initials = 'OP';
                 </div>
                 <div id="precache-indicator" class="precache-indicator hidden"><i class="bi bi-cloud-check"></i> Fotos precargadas</div>
                 <button type="button" id="btn-precache" class="precache-btn"><i class="bi bi-cloud-download"></i> Precargar fotos offline</button>
-            </div>
-
-            <div class="card">
-                <div class="card-label"><i class="bi bi-tools"></i> Unidad de Obra</div>
-                <select id="unidad-obra" class="input-field"><option value="">Seleccionar unidad de obra</option></select>
             </div>
 
             <div class="card">
@@ -319,10 +314,6 @@ if ($initials === '') $initials = 'OP';
                 </select>
             </div>
             <div class="card" style="margin:12px 16px;">
-                <div class="card-label"><i class="bi bi-tools"></i> Unidad de Obra</div>
-                <select id="editar-uo" class="input-field"><option value="">Sin asignar</option></select>
-            </div>
-            <div class="card" style="margin:12px 16px;">
                 <div class="card-label"><i class="bi bi-chat-text"></i> Observaciones</div>
                 <textarea id="editar-observaciones" class="input-field input-textarea" rows="3" placeholder="Observaciones..."></textarea>
             </div>
@@ -360,6 +351,8 @@ if ($initials === '') $initials = 'OP';
                 <button type="button" id="btn-export-excel" class="panel-action-btn panel-action--excel"><i class="bi bi-file-earmark-spreadsheet"></i> Excel</button>
                 <button type="button" id="btn-export-pdf-all" class="panel-action-btn panel-action--pdf"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
                 <button type="button" id="btn-delete-local" class="panel-action-btn panel-action--delete"><i class="bi bi-trash3"></i> Borrar local</button>
+                <button type="button" id="btn-import-excel" class="panel-action-btn panel-action--import"><i class="bi bi-file-earmark-arrow-up"></i> Importar Excel</button>
+                <input type="file" id="import-file-input" accept=".xlsx,.xls,.csv" style="display:none;">
             </div>
         </div>
         <div class="panel-body" id="panel-body">
@@ -479,6 +472,7 @@ if ($initials === '') $initials = 'OP';
                 capasKml: 'api/capas_kml.php',
                 visitas: 'api/visitas.php',
                 exportPdf: 'api/export_pdf.php',
+                importInfra: 'api/import_infraestructuras.php',
             }
         };
     </script>

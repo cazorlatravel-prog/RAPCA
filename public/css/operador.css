@@ -2668,6 +2668,11 @@ select.input-field {
     color: #991b1b;
 }
 .panel-action--pdf:active { background: #fecaca; }
+.panel-action--import {
+    background: #dbeafe;
+    color: #1e40af;
+}
+.panel-action--import:active { background: #bfdbfe; }
 .panel-action--delete {
     background: #f3f4f6;
     color: #6b7280;

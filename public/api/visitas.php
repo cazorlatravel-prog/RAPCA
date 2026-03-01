@@ -10,7 +10,7 @@
  *   - action=editar
  *   - registro_id: ID del registro a editar
  *   - usuario_id: para verificar propiedad
- *   - observaciones, estado_incidencia, unidad_obra_id: campos editables
+ *   - observaciones, estado_incidencia: campos editables
  */
 
 declare(strict_types=1);
@@ -42,12 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             "SELECT r.id, r.infra_id, r.fecha, r.lat_real, r.lon_real,
                     r.url_cloudinary, r.estado_incidencia, r.observaciones,
                     r.tipo_foto, r.secuencia_comparativa, r.nombre_archivo,
-                    r.unidad_obra_id,
-                    i.nombre AS infra_nombre, i.codigo_unico,
-                    uo.nombre AS uo_nombre
+                    i.nombre AS infra_nombre, i.cod_infoca
              FROM registros r
              INNER JOIN infraestructuras i ON r.infra_id = i.id
-             LEFT JOIN unidades_obra uo ON r.unidad_obra_id = uo.id
              WHERE r.id = :id AND r.usuario_id = :uid"
         );
         $stmt->execute([':id' => $registroId, ':uid' => $usuarioId]);
@@ -67,12 +64,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         "SELECT r.id, r.infra_id, r.fecha, r.lat_real, r.lon_real,
                 r.url_cloudinary, r.estado_incidencia, r.observaciones,
                 r.tipo_foto, r.secuencia_comparativa, r.nombre_archivo,
-                r.unidad_obra_id,
-                i.nombre AS infra_nombre, i.codigo_unico,
-                uo.nombre AS uo_nombre
+                i.nombre AS infra_nombre, i.cod_infoca
          FROM registros r
          INNER JOIN infraestructuras i ON r.infra_id = i.id
-         LEFT JOIN unidades_obra uo ON r.unidad_obra_id = uo.id
          WHERE r.usuario_id = :uid
          ORDER BY r.fecha DESC
          LIMIT 500"
@@ -90,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $visitas[$key] = [
                 'infra_id' => (int) $r['infra_id'],
                 'infra_nombre' => $r['infra_nombre'],
-                'infra_codigo' => $r['codigo_unico'],
+                'infra_codigo' => $r['cod_infoca'] ?? '',
                 'fecha' => $dia,
                 'fotos' => [],
             ];
@@ -105,8 +99,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'observaciones' => $r['observaciones'] ?? '',
             'nombre' => $r['nombre_archivo'] ?? '',
             'hora' => date('H:i', strtotime($r['fecha'])),
-            'uo_nombre' => $r['uo_nombre'] ?? '',
-            'unidad_obra_id' => $r['unidad_obra_id'] ? (int) $r['unidad_obra_id'] : null,
         ];
     }
 
@@ -151,12 +143,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $params[':estado'] = $estado;
             }
         }
-        if (isset($_POST['unidad_obra_id'])) {
-            $uoId = $_POST['unidad_obra_id'] !== '' ? (int) $_POST['unidad_obra_id'] : null;
-            $updates[] = 'unidad_obra_id = :uo_id';
-            $params[':uo_id'] = $uoId;
-        }
-
         if (empty($updates)) {
             echo json_encode(['ok' => false, 'error' => 'No hay campos para actualizar']);
             exit;

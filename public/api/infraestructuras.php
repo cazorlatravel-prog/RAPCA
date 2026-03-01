@@ -2,13 +2,13 @@
 /**
  * RAPCA - API: Buscar/crear infraestructuras
  *
- * GET  ?q=texto                             → buscar por nombre/código
- * GET  ?provincia=Y                         → filtrar por provincia
- * GET  ?provincia=Y&municipio=Z             → filtrar por provincia y municipio
- * GET  ?action=provincias                   → lista de provincias únicas
- * GET  ?action=municipios&provincia=Y       → lista de municipios de una provincia
+ * GET  ?q=texto                             → buscar por nombre/cod_infoca
+ * GET  ?zona=Z                              → filtrar por id_zona
+ * GET  ?municipio=M                         → filtrar por municipio
+ * GET  ?action=zonas                        → lista de zonas únicas
+ * GET  ?action=municipios[&zona=Z]          → lista de municipios únicos
  * GET  ?usuario_id=X                        → filtrar por acceso del operador
- * POST nombre, lat, lon                     → crear nueva infraestructura
+ * POST nombre, ...                          → crear nueva infraestructura
  */
 
 declare(strict_types=1);
@@ -26,17 +26,8 @@ try {
     exit;
 }
 
-// Detectar si las columnas provincia/municipio existen
-$hasLocationCols = false;
-try {
-    $cols = $pdo->query("SHOW COLUMNS FROM infraestructuras LIKE 'provincia'")->fetchAll();
-    $hasLocationCols = count($cols) > 0;
-} catch (\Exception $e) {
-    // tabla puede no existir todavía
-}
-
 // ---------------------------------------------------------------
-// GET: buscar infraestructuras / listas de provincias/municipios
+// GET: buscar infraestructuras / listas de municipios
 // ---------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $action    = trim($_GET['action'] ?? '');
@@ -52,45 +43,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $infraFilter = " AND id IN ($placeholders)";
             $infraFilterParams = $infraIds;
         }
-        // Si no tiene infraestructuras asignadas, mostrar todas (permisivo)
     }
 
-    // Listar provincias únicas
-    if ($action === 'provincias') {
-        if (!$hasLocationCols) {
-            echo json_encode(['ok' => true, 'provincias' => []]);
-            exit;
-        }
-        $sql = "SELECT DISTINCT provincia
+    // Listar zonas únicas
+    if ($action === 'zonas') {
+        $sql = "SELECT DISTINCT id_zona
                 FROM infraestructuras
-                WHERE activa = 1 AND provincia IS NOT NULL AND provincia != ''" . $infraFilter . "
-                ORDER BY provincia ASC";
+                WHERE activa = 1 AND id_zona IS NOT NULL AND id_zona != ''" . $infraFilter . "
+                ORDER BY id_zona ASC";
         $stmt = $pdo->prepare($sql);
         $stmt->execute($infraFilterParams);
-        $provincias = array_column($stmt->fetchAll(), 'provincia');
-        echo json_encode(['ok' => true, 'provincias' => $provincias]);
+        $zonas = array_column($stmt->fetchAll(), 'id_zona');
+        echo json_encode(['ok' => true, 'zonas' => $zonas]);
         exit;
     }
 
-    // Listar municipios de una provincia
+    // Listar municipios únicos (opcionalmente filtrados por zona)
     if ($action === 'municipios') {
-        if (!$hasLocationCols) {
-            echo json_encode(['ok' => true, 'municipios' => []]);
-            exit;
-        }
-        $provincia = trim($_GET['provincia'] ?? '');
-        if ($provincia === '') {
-            echo json_encode(['ok' => true, 'municipios' => []]);
-            exit;
-        }
+        $zona = trim($_GET['zona'] ?? '');
         $sql = "SELECT DISTINCT municipio
                 FROM infraestructuras
-                WHERE activa = 1
-                  AND provincia = ?  AND municipio IS NOT NULL AND municipio != ''" . $infraFilter . "
-                ORDER BY municipio ASC";
-        $params = array_merge([$provincia], $infraFilterParams);
+                WHERE activa = 1 AND municipio IS NOT NULL AND municipio != ''";
+        $mParams = [];
+        if ($zona !== '') {
+            $sql .= " AND id_zona = ?";
+            $mParams[] = $zona;
+        }
+        $sql .= $infraFilter;
+        $mParams = array_merge($mParams, $infraFilterParams);
+        $sql .= " ORDER BY municipio ASC";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
+        $stmt->execute($mParams);
         $municipios = array_column($stmt->fetchAll(), 'municipio');
         echo json_encode(['ok' => true, 'municipios' => $municipios]);
         exit;
@@ -98,23 +81,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     // Buscar infraestructuras con filtros opcionales
     $q         = trim($_GET['q'] ?? '');
-    $provincia = trim($_GET['provincia'] ?? '');
+    $zona      = trim($_GET['zona'] ?? '');
     $municipio = trim($_GET['municipio'] ?? '');
 
     $where  = "activa = 1";
     $params = [];
 
-    if ($hasLocationCols && $provincia !== '') {
-        $where .= " AND provincia = ?";
-        $params[] = $provincia;
+    if ($zona !== '') {
+        $where .= " AND id_zona = ?";
+        $params[] = $zona;
     }
-    if ($hasLocationCols && $municipio !== '') {
+
+    if ($municipio !== '') {
         $where .= " AND municipio = ?";
         $params[] = $municipio;
     }
 
     if ($q !== '') {
-        $where .= " AND (nombre LIKE ? OR codigo_unico LIKE ?)";
+        $where .= " AND (nombre LIKE ? OR cod_infoca LIKE ? OR id_zona LIKE ? OR id_unidad LIKE ?)";
+        $params[] = '%' . $q . '%';
+        $params[] = '%' . $q . '%';
         $params[] = '%' . $q . '%';
         $params[] = '%' . $q . '%';
     }
@@ -126,13 +112,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $params = array_merge($params, $infraFilterParams);
     }
 
-    $selectCols = "id, nombre, codigo_unico, lat_teorica, lon_teorica, tipo";
-    if ($hasLocationCols) {
-        $selectCols .= ", provincia, municipio";
-    }
-
     $stmt = $pdo->prepare(
-        "SELECT $selectCols
+        "SELECT id, id_zona, id_unidad, cod_infoca, nombre, superficie,
+                municipio, monte, cod_monte, pendiente, distancia_aprisco,
+                vegetacion, tipo_contrato, parque, pago_max, desbroce,
+                observaciones, lat_teorica, lon_teorica
          FROM infraestructuras
          WHERE $where
          ORDER BY nombre ASC
@@ -148,11 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 // POST: crear nueva infraestructura
 // ---------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nombre    = trim($_POST['nombre'] ?? '');
-    $lat       = (float) ($_POST['lat'] ?? 0);
-    $lon       = (float) ($_POST['lon'] ?? 0);
-    $provincia = trim($_POST['provincia'] ?? '');
-    $municipio = trim($_POST['municipio'] ?? '');
+    $nombre = trim($_POST['nombre'] ?? '');
 
     if ($nombre === '') {
         http_response_code(400);
@@ -160,47 +140,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Auto-generar código único
-    $codigo = 'INF-' . strtoupper(substr(md5($nombre . time()), 0, 8));
+    $stmt = $pdo->prepare(
+        "INSERT INTO infraestructuras
+            (id_zona, id_unidad, cod_infoca, nombre, superficie, municipio,
+             monte, cod_monte, pendiente, distancia_aprisco, vegetacion,
+             tipo_contrato, parque, pago_max, desbroce, observaciones,
+             lat_teorica, lon_teorica, activa)
+         VALUES
+            (:id_zona, :id_unidad, :cod_infoca, :nombre, :superficie, :municipio,
+             :monte, :cod_monte, :pendiente, :distancia_aprisco, :vegetacion,
+             :tipo_contrato, :parque, :pago_max, :desbroce, :observaciones,
+             :lat, :lon, 1)"
+    );
 
-    if ($hasLocationCols) {
-        $stmt = $pdo->prepare(
-            "INSERT INTO infraestructuras (nombre, codigo_unico, lat_teorica, lon_teorica, tipo, provincia, municipio, activa)
-             VALUES (:nombre, :codigo, :lat, :lon, NULL, :provincia, :municipio, 1)"
-        );
-        $stmt->execute([
-            ':nombre'    => $nombre,
-            ':codigo'    => $codigo,
-            ':lat'       => $lat,
-            ':lon'       => $lon,
-            ':provincia' => $provincia ?: null,
-            ':municipio' => $municipio ?: null,
-        ]);
-    } else {
-        $stmt = $pdo->prepare(
-            "INSERT INTO infraestructuras (nombre, codigo_unico, lat_teorica, lon_teorica, tipo, activa)
-             VALUES (:nombre, :codigo, :lat, :lon, NULL, 1)"
-        );
-        $stmt->execute([
-            ':nombre'  => $nombre,
-            ':codigo'  => $codigo,
-            ':lat'     => $lat,
-            ':lon'     => $lon,
-        ]);
-    }
+    $stmt->execute([
+        ':id_zona'           => trim($_POST['id_zona'] ?? '') ?: null,
+        ':id_unidad'         => trim($_POST['id_unidad'] ?? '') ?: null,
+        ':cod_infoca'        => trim($_POST['cod_infoca'] ?? '') ?: null,
+        ':nombre'            => $nombre,
+        ':superficie'        => ($_POST['superficie'] ?? '') !== '' ? (float) $_POST['superficie'] : null,
+        ':municipio'         => trim($_POST['municipio'] ?? '') ?: null,
+        ':monte'             => trim($_POST['monte'] ?? '') ?: null,
+        ':cod_monte'         => trim($_POST['cod_monte'] ?? '') ?: null,
+        ':pendiente'         => trim($_POST['pendiente'] ?? '') ?: null,
+        ':distancia_aprisco' => trim($_POST['distancia_aprisco'] ?? '') ?: null,
+        ':vegetacion'        => trim($_POST['vegetacion'] ?? '') ?: null,
+        ':tipo_contrato'     => trim($_POST['tipo_contrato'] ?? '') ?: null,
+        ':parque'            => trim($_POST['parque'] ?? '') ?: null,
+        ':pago_max'          => ($_POST['pago_max'] ?? '') !== '' ? (float) $_POST['pago_max'] : null,
+        ':desbroce'          => trim($_POST['desbroce'] ?? '') ?: null,
+        ':observaciones'     => trim($_POST['observaciones'] ?? '') ?: null,
+        ':lat'               => ($_POST['lat'] ?? '') !== '' ? (float) $_POST['lat'] : null,
+        ':lon'               => ($_POST['lon'] ?? '') !== '' ? (float) $_POST['lon'] : null,
+    ]);
 
     $newId = (int) $pdo->lastInsertId();
 
     echo json_encode([
         'ok' => true,
         'infraestructura' => [
-            'id'            => $newId,
-            'nombre'        => $nombre,
-            'codigo_unico'  => $codigo,
-            'lat_teorica'   => $lat,
-            'lon_teorica'   => $lon,
-            'provincia'     => $provincia ?: null,
-            'municipio'     => $municipio ?: null,
+            'id'         => $newId,
+            'nombre'     => $nombre,
+            'cod_infoca' => trim($_POST['cod_infoca'] ?? '') ?: null,
         ]
     ]);
     exit;

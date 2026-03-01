@@ -17,7 +17,6 @@
         infraId: null,
         infraName: '',
         infraCode: '',
-        unidadObraId: null,
         currentMode: null, // 'aleatorio' | 'comparativo'
         gps: { lat: null, lon: null },
         gpsWatchId: null,
@@ -65,7 +64,6 @@
     const infraSelected    = $('#infra-selected');
     const infraSelectedName = $('#infra-selected-name');
     const infraClear       = $('#infra-clear');
-    const unidadObra       = $('#unidad-obra');
     const fechaDisplay     = $('#fecha-display');
     const btnAleatorias    = $('#btn-fotos-aleatorias');
     const btnComparativas  = $('#btn-fotos-comparativas');
@@ -134,8 +132,7 @@
     function init() {
         updateDate();
         setInterval(updateClock, 30000);
-        loadProvincias();
-        loadUnidadesObra();
+        loadZonas();
         bindEvents();
         initGPS();
         initOffline();
@@ -369,38 +366,38 @@
     }
 
     // ===================================================================
-    // PROVINCIA / MUNICIPIO FILTERS
+    // ZONA / MUNICIPIO FILTERS
     // ===================================================================
-    const filterProvincia = $('#filter-provincia');
+    const filterZona = $('#filter-zona');
     const filterMunicipio = $('#filter-municipio');
 
-    async function loadProvincias() {
+    async function loadZonas() {
         try {
             const res = await fetch(
-                `${CFG.endpoints.infraestructuras}?action=provincias&usuario_id=${CFG.usuarioId}`
+                `${CFG.endpoints.infraestructuras}?action=zonas&usuario_id=${CFG.usuarioId}`
             );
             const data = await res.json();
-            if (data.ok && data.provincias) {
-                let html = '<option value="">-- Todas las provincias --</option>';
-                data.provincias.forEach(p => {
-                    html += `<option value="${escHtml(p)}">${escHtml(p)}</option>`;
+            if (data.ok && data.zonas) {
+                let html = '<option value="">-- Todas las zonas --</option>';
+                data.zonas.forEach(z => {
+                    html += `<option value="${escHtml(z)}">${escHtml(z)}</option>`;
                 });
-                filterProvincia.innerHTML = html;
+                filterZona.innerHTML = html;
             }
         } catch (err) {
-            console.warn('Error loading provincias:', err);
+            console.warn('Error loading zonas:', err);
         }
     }
 
-    async function loadMunicipios(provincia) {
-        if (!provincia) {
+    async function loadMunicipios(zona) {
+        if (!zona) {
             filterMunicipio.innerHTML = '<option value="">-- Todos los municipios --</option>';
             filterMunicipio.disabled = true;
             return;
         }
         try {
             const res = await fetch(
-                `${CFG.endpoints.infraestructuras}?action=municipios&usuario_id=${CFG.usuarioId}&provincia=${encodeURIComponent(provincia)}`
+                `${CFG.endpoints.infraestructuras}?action=municipios&usuario_id=${CFG.usuarioId}&zona=${encodeURIComponent(zona)}`
             );
             const data = await res.json();
             if (data.ok && data.municipios) {
@@ -418,9 +415,9 @@
 
     function getFilterParams() {
         let params = '';
-        const prov = filterProvincia ? filterProvincia.value : '';
+        const zona = filterZona ? filterZona.value : '';
         const muni = filterMunicipio ? filterMunicipio.value : '';
-        if (prov) params += `&provincia=${encodeURIComponent(prov)}`;
+        if (zona) params += `&zona=${encodeURIComponent(zona)}`;
         if (muni) params += `&municipio=${encodeURIComponent(muni)}`;
         return params;
     }
@@ -456,9 +453,9 @@
                 }
 
                 data.infraestructuras.forEach(inf => {
-                    const loc = [inf.municipio, inf.provincia].filter(Boolean).join(', ');
-                    html += `<div class="result-item" data-id="${inf.id}" data-name="${escHtml(inf.nombre)}" data-code="${escHtml(inf.codigo_unico)}">
-                        ${escHtml(inf.nombre)} <span class="result-code">${escHtml(inf.codigo_unico)}</span>
+                    const loc = inf.municipio || '';
+                    html += `<div class="result-item" data-id="${inf.id}" data-name="${escHtml(inf.nombre)}" data-code="${escHtml(inf.cod_infoca || '')}">
+                        ${escHtml(inf.nombre)} <span class="result-code">${escHtml(inf.cod_infoca || '')}</span>
                         ${loc ? `<span class="result-location">${escHtml(loc)}</span>` : ''}
                     </div>`;
                 });
@@ -529,7 +526,7 @@
                 selectInfra(
                     data.infraestructura.id,
                     data.infraestructura.nombre,
-                    data.infraestructura.codigo_unico
+                    data.infraestructura.cod_infoca || ''
                 );
             }
         } catch (err) {
@@ -568,26 +565,6 @@
         const obsField = $('#observaciones-general');
         if (obsField) obsField.value = '';
         updateButtonState();
-    }
-
-    // ===================================================================
-    // UNIDADES DE OBRA
-    // ===================================================================
-    async function loadUnidadesObra() {
-        try {
-            const res = await fetch(`${CFG.endpoints.unidadesObra}`);
-            const data = await res.json();
-            if (data.ok && data.unidades) {
-                let html = '<option value="">-- Seleccionar unidad de obra --</option>';
-                data.unidades.forEach(u => {
-                    const label = u.codigo ? `${u.codigo} - ${u.nombre}` : u.nombre;
-                    html += `<option value="${u.id}">${escHtml(label)}</option>`;
-                });
-                unidadObra.innerHTML = html;
-            }
-        } catch (err) {
-            console.warn('Error loading unidades de obra:', err);
-        }
     }
 
     // ===================================================================
@@ -907,7 +884,6 @@
             nombre_archivo: filename,
             observaciones: $('#observaciones-general').value || '',
             secuencia_comparativa: seq,
-            unidad_obra_id: unidadObra.value || null,
             datos_tecnicos: JSON.stringify({
                 timestamp: new Date().toISOString(),
                 etrs89_lat: state.gps.lat,
@@ -957,9 +933,6 @@
 
         if (seq !== null) {
             formData.append('secuencia_comparativa', seq);
-        }
-        if (unidadObra.value) {
-            formData.append('unidad_obra_id', unidadObra.value);
         }
         formData.append('datos_tecnicos', uploadData.datos_tecnicos);
 
@@ -1287,10 +1260,10 @@
     // EVENTS
     // ===================================================================
     function bindEvents() {
-        // Provincia / municipio filters
-        if (filterProvincia) {
-            filterProvincia.addEventListener('change', () => {
-                loadMunicipios(filterProvincia.value);
+        // Zona / municipio filters
+        if (filterZona) {
+            filterZona.addEventListener('change', () => {
+                loadMunicipios(filterZona.value);
                 clearInfra();
             });
         }
@@ -1310,11 +1283,6 @@
             if (!e.target.closest('.search-container')) {
                 infraResults.classList.add('hidden');
             }
-        });
-
-        // Unidad de obra change
-        unidadObra.addEventListener('change', () => {
-            state.unidadObraId = unidadObra.value || null;
         });
 
         // Photo mode buttons
@@ -1464,6 +1432,14 @@
         });
         if (btnGuardarEdicion) btnGuardarEdicion.addEventListener('click', guardarEdicion);
         if (btnAñadirFotoVisita) btnAñadirFotoVisita.addEventListener('click', añadirFotoDesdeVisita);
+
+        // Importar Excel
+        const btnImportExcel = $('#btn-import-excel');
+        const importFileInput = $('#import-file-input');
+        if (btnImportExcel && importFileInput) {
+            btnImportExcel.addEventListener('click', () => importFileInput.click());
+            importFileInput.addEventListener('change', handleImportExcel);
+        }
     }
 
     // ===================================================================
@@ -1629,8 +1605,7 @@
                         byInfra[r.infra_id] = {
                             id: r.infra_id,
                             nombre: r.infra_nombre,
-                            codigo: r.codigo_unico,
-                            tipo: r.infra_tipo,
+                            codigo: r.cod_infoca || '',
                             lat: parseFloat(r.lat_teorica),
                             lon: parseFloat(r.lon_teorica),
                             registros: [],
@@ -1651,8 +1626,7 @@
                         allInfras[id] = {
                             id: id,
                             nombre: inf.nombre,
-                            codigo: inf.codigo_unico,
-                            tipo: inf.tipo,
+                            codigo: inf.cod_infoca || '',
                             lat: parseFloat(inf.lat_teorica),
                             lon: parseFloat(inf.lon_teorica),
                             registros: [],
@@ -2491,14 +2465,12 @@
         state.ghostUrl = null;
         state.ghostActive = false;
         state.situacionIdx = 0;
-        state.unidadObraId = null;
 
         // Reset UI
         infraIdInput.value = '';
         infraSearch.value = '';
         infraSearch.classList.remove('hidden');
         infraSelected.classList.add('hidden');
-        unidadObra.value = '';
         const obsField = $('#observaciones-general');
         if (obsField) obsField.value = '';
         countAleatorias.textContent = '0';
@@ -2625,16 +2597,7 @@
             obsField.value = lastObs;
         }
 
-        // 4. Set work unit from the most recent photo that has one
-        if (visita.fotos && visita.fotos.length > 0) {
-            const fotoConUO = visita.fotos.find(f => f.unidad_obra_id);
-            if (fotoConUO && fotoConUO.unidad_obra_id) {
-                unidadObra.value = fotoConUO.unidad_obra_id;
-                state.unidadObraId = fotoConUO.unidad_obra_id;
-            }
-        }
-
-        // 5. Load all visit photos into gallery and set counters
+        // 4. Load all visit photos into gallery and set counters
         galleryGrid.innerHTML = '';
         state.photos = [];
         state.countAleatorias = 0;
@@ -2683,7 +2646,6 @@
         const editarImg = $('#editar-foto-img');
         const editarInfo = $('#editar-info');
         const editarEstado = $('#editar-estado');
-        const editarUo = $('#editar-uo');
         const editarObs = $('#editar-observaciones');
         const editarInfraName = $('#editar-infra-name');
 
@@ -2711,7 +2673,7 @@
             }) : '--';
 
             editarInfo.innerHTML = `
-                <strong>${escHtml(r.infra_nombre)}</strong> <code>${escHtml(r.codigo_unico)}</code><br>
+                <strong>${escHtml(r.infra_nombre)}</strong> <code>${escHtml(r.cod_infoca || '')}</code><br>
                 <i class="bi bi-calendar3"></i> ${fechaFmt}<br>
                 <i class="bi bi-camera"></i> ${r.tipo_foto === 'comparativo' ? 'Comparativa' : 'Aleatoria'}
                 ${r.nombre_archivo ? ' - ' + escHtml(r.nombre_archivo) : ''}
@@ -2719,20 +2681,6 @@
 
             editarEstado.value = r.estado_incidencia || 'vp';
             editarObs.value = r.observaciones || '';
-
-            // Load UO options
-            editarUo.innerHTML = '<option value="">Sin asignar</option>';
-            try {
-                const uoRes = await fetch(`${CFG.endpoints.unidadesObra}`);
-                const uoData = await uoRes.json();
-                if (uoData.ok && uoData.unidades) {
-                    uoData.unidades.forEach(u => {
-                        const label = u.codigo ? `${u.codigo} - ${u.nombre}` : u.nombre;
-                        const sel = (r.unidad_obra_id && parseInt(r.unidad_obra_id) === parseInt(u.id)) ? 'selected' : '';
-                        editarUo.innerHTML += `<option value="${u.id}" ${sel}>${escHtml(label)}</option>`;
-                    });
-                }
-            } catch (e) { /* UO loading optional */ }
 
         } catch (err) {
             showNotification('Error al cargar registro');
@@ -2744,7 +2692,6 @@
         if (!editingRegistroId) return;
 
         const editarEstado = $('#editar-estado');
-        const editarUo = $('#editar-uo');
         const editarObs = $('#editar-observaciones');
 
         const formData = new FormData();
@@ -2752,7 +2699,6 @@
         formData.append('registro_id', editingRegistroId);
         formData.append('usuario_id', CFG.usuarioId);
         formData.append('estado_incidencia', editarEstado.value);
-        formData.append('unidad_obra_id', editarUo.value);
         formData.append('observaciones', editarObs.value);
 
         try {
@@ -3114,7 +3060,7 @@
         const rows = data.map(r => [
             r.id,
             `"${(r.infra_nombre || '').replace(/"/g, '""')}"`,
-            r.codigo_unico || '',
+            r.cod_infoca || '',
             r.fecha || '',
             r.estado_incidencia || '',
             r.tipo_foto || '',
@@ -3163,6 +3109,53 @@
         }
         const url = `${CFG.endpoints.exportPdf}?usuario_id=${CFG.usuarioId}&all=1`;
         window.open(url, '_blank');
+    }
+
+    // ===================================================================
+    // IMPORT EXCEL
+    // ===================================================================
+    async function handleImportExcel(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const allowed = ['xlsx', 'xls', 'csv'];
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!allowed.includes(ext)) {
+            showToast('Formato no soportado. Usa .xlsx, .xls o .csv', 'error');
+            e.target.value = '';
+            return;
+        }
+
+        showToast('Importando infraestructuras...', 'info');
+
+        const formData = new FormData();
+        formData.append('archivo', file);
+
+        try {
+            const res = await fetch(CFG.endpoints.importInfra, {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await res.json();
+
+            if (data.ok) {
+                let msg = data.mensaje || `${data.insertadas} infraestructuras importadas`;
+                showToast(msg, 'success');
+                // Recargar zonas y limpiar búsqueda
+                loadZonas();
+                clearInfra();
+            } else {
+                showToast('Error: ' + (data.error || 'No se pudo importar'), 'error');
+            }
+
+            if (data.errores && data.errores.length > 0) {
+                console.warn('Errores de importación:', data.errores);
+            }
+        } catch (err) {
+            showToast('Error de conexión al importar', 'error');
+        }
+
+        e.target.value = '';
     }
 
     // ===================================================================

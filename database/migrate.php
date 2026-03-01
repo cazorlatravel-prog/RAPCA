@@ -75,6 +75,73 @@ try {
         }
     }
 
+    // --- Pre-migration: añadir nuevos campos de infraestructuras (gestión forestal INFOCA) ---
+    $newInfraCols = [
+        'id_zona'           => "VARCHAR(50) DEFAULT NULL COMMENT 'Identificador de zona' AFTER id",
+        'id_unidad'         => "VARCHAR(50) DEFAULT NULL COMMENT 'Identificador de unidad' AFTER id_zona",
+        'cod_infoca'        => "VARCHAR(50) DEFAULT NULL COMMENT 'Codigo INFOCA' AFTER id_unidad",
+        'superficie'        => "DECIMAL(12,2) DEFAULT NULL COMMENT 'Superficie en hectareas' AFTER nombre",
+        'monte'             => "VARCHAR(200) DEFAULT NULL COMMENT 'Nombre del monte' AFTER municipio",
+        'cod_monte'         => "VARCHAR(50) DEFAULT NULL COMMENT 'Codigo del monte' AFTER monte",
+        'pendiente'         => "VARCHAR(100) DEFAULT NULL COMMENT 'Pendiente del terreno' AFTER cod_monte",
+        'distancia_aprisco' => "VARCHAR(100) DEFAULT NULL COMMENT 'Distancia al aprisco' AFTER pendiente",
+        'vegetacion'        => "VARCHAR(200) DEFAULT NULL COMMENT 'Tipo de vegetacion' AFTER distancia_aprisco",
+        'tipo_contrato'     => "VARCHAR(100) DEFAULT NULL COMMENT 'Tipo de contrato' AFTER vegetacion",
+        'parque'            => "VARCHAR(200) DEFAULT NULL COMMENT 'Parque natural' AFTER tipo_contrato",
+        'pago_max'          => "DECIMAL(10,2) DEFAULT NULL COMMENT 'Pago maximo' AFTER parque",
+        'desbroce'          => "VARCHAR(200) DEFAULT NULL COMMENT 'Tipo de desbroce' AFTER pago_max",
+        'observaciones'     => "TEXT DEFAULT NULL AFTER desbroce",
+    ];
+
+    foreach ($newInfraCols as $col => $def) {
+        try {
+            $pdo->exec("ALTER TABLE infraestructuras ADD COLUMN $col $def");
+            echo "<span class='ok'>[OK]</span> Columna '$col' añadida a infraestructuras\n";
+        } catch (PDOException $e) {
+            if (str_contains($e->getMessage(), 'Duplicate column')) {
+                echo "<span class='info'>[INFO]</span> Columna '$col' ya existe en infraestructuras\n";
+            } else {
+                echo "<span class='warn'>[WARN]</span> ALTER infraestructuras ADD $col: " . $e->getMessage() . "\n";
+            }
+        }
+    }
+
+    // Hacer lat_teorica y lon_teorica opcionales y eliminar codigo_unico obligatorio
+    try {
+        $pdo->exec("ALTER TABLE infraestructuras MODIFY COLUMN lat_teorica DECIMAL(10,7) DEFAULT NULL");
+        $pdo->exec("ALTER TABLE infraestructuras MODIFY COLUMN lon_teorica DECIMAL(10,7) DEFAULT NULL");
+        echo "<span class='ok'>[OK]</span> lat/lon_teorica ahora son opcionales\n";
+    } catch (PDOException $e) {
+        echo "<span class='warn'>[WARN]</span> ALTER lat/lon: " . $e->getMessage() . "\n";
+    }
+
+    // --- Pre-migration: eliminar unidad_obra_id de registros ---
+    try {
+        $pdo->exec("ALTER TABLE registros DROP COLUMN unidad_obra_id");
+        echo "<span class='ok'>[OK]</span> Columna unidad_obra_id eliminada de registros\n";
+    } catch (PDOException $e) {
+        if (str_contains($e->getMessage(), "check that column/key exists")) {
+            echo "<span class='info'>[INFO]</span> Columna unidad_obra_id ya no existe en registros\n";
+        } else {
+            echo "<span class='warn'>[WARN]</span> DROP unidad_obra_id: " . $e->getMessage() . "\n";
+        }
+    }
+
+    // --- Pre-migration: eliminar columnas antiguas de infraestructuras ---
+    $dropCols = ['codigo_unico', 'tipo', 'provincia', 'descripcion'];
+    foreach ($dropCols as $col) {
+        try {
+            $pdo->exec("ALTER TABLE infraestructuras DROP COLUMN $col");
+            echo "<span class='ok'>[OK]</span> Columna '$col' eliminada de infraestructuras\n";
+        } catch (PDOException $e) {
+            if (str_contains($e->getMessage(), "check that column/key exists")) {
+                echo "<span class='info'>[INFO]</span> Columna '$col' ya no existe en infraestructuras\n";
+            } else {
+                echo "<span class='warn'>[WARN]</span> DROP $col: " . $e->getMessage() . "\n";
+            }
+        }
+    }
+
     $sqlFile = __DIR__ . '/schema.sql';
     if (!file_exists($sqlFile)) {
         echo "<span class='error'>[ERROR]</span> schema.sql no encontrado\n";

@@ -33,12 +33,11 @@ try {
     if ($registroId > 0) {
         // Single record PDF
         $stmt = $pdo->prepare("
-            SELECT r.*, i.nombre AS infra_nombre, i.codigo_unico, i.provincia, i.municipio,
-                   u.nombre AS usuario_nombre, uo.nombre AS uo_nombre
+            SELECT r.*, i.nombre AS infra_nombre, i.cod_infoca, i.municipio,
+                   u.nombre AS usuario_nombre
             FROM registros r
             JOIN infraestructuras i ON r.infra_id = i.id
             JOIN usuarios u ON r.usuario_id = u.id
-            LEFT JOIN unidades_obra uo ON r.unidad_obra_id = uo.id
             WHERE r.id = :id AND r.usuario_id = :uid
         ");
         $stmt->execute([':id' => $registroId, ':uid' => $usuarioId]);
@@ -56,12 +55,11 @@ try {
     } elseif ($all) {
         // All records summary
         $stmt = $pdo->prepare("
-            SELECT r.*, i.nombre AS infra_nombre, i.codigo_unico,
-                   u.nombre AS usuario_nombre, uo.nombre AS uo_nombre
+            SELECT r.*, i.nombre AS infra_nombre, i.cod_infoca,
+                   u.nombre AS usuario_nombre
             FROM registros r
             JOIN infraestructuras i ON r.infra_id = i.id
             JOIN usuarios u ON r.usuario_id = u.id
-            LEFT JOIN unidades_obra uo ON r.unidad_obra_id = uo.id
             WHERE r.usuario_id = :uid
             ORDER BY r.fecha DESC
             LIMIT 200
@@ -136,14 +134,14 @@ th { background: #f3f4f6; font-weight: 700; color: #555; width: 30%; }
 <h1>RAPCA — Informe de Registro</h1>
 <div class="subtitle">Generado el {$fecha} · Registro #{$r['id']}</div>
 <table>
-<tr><th>Infraestructura</th><td>{$r['infra_nombre']} ({$r['codigo_unico']})</td></tr>
-<tr><th>Ubicación</th><td>{$r['provincia']} / {$r['municipio']}</td></tr>
+<tr><th>Infraestructura</th><td>{$r['infra_nombre']}</td></tr>
+<tr><th>Cód. INFOCA</th><td>{$r['cod_infoca']}</td></tr>
+<tr><th>Municipio</th><td>{$r['municipio']}</td></tr>
 <tr><th>Fecha</th><td>{$fecha}</td></tr>
 <tr><th>Operador</th><td>{$r['usuario_nombre']}</td></tr>
 <tr><th>Estado</th><td><span class="badge badge-{$r['estado_incidencia']}">{$estado}</span></td></tr>
 <tr><th>Tipo de foto</th><td><span class="badge badge-{$r['tipo_foto']}">{$tipo}</span> {$seq}</td></tr>
 <tr><th>Coordenadas ETRS89</th><td>{$coords}</td></tr>
-<tr><th>Unidad de Obra</th><td>{$r['uo_nombre']}</td></tr>
 <tr><th>Observaciones</th><td>{$r['observaciones']}</td></tr>
 <tr><th>Archivo</th><td>{$r['nombre_archivo']}</td></tr>
 </table>

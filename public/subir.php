@@ -66,11 +66,10 @@ $incidencia  = $_POST['estado_incidencia'] ?? 'vp';
 $observaciones = isset($_POST['observaciones']) ? trim((string)$_POST['observaciones']) : null;
 $datosTecnicos = isset($_POST['datos_tecnicos']) ? $_POST['datos_tecnicos'] : null;
 
-// Campos v3: tipo de foto, secuencia, nombre, unidad de obra
+// Campos v3: tipo de foto, secuencia, nombre
 $tipoFoto              = $_POST['tipo_foto'] ?? 'aleatorio';
 $secuenciaComparativa  = isset($_POST['secuencia_comparativa']) && $_POST['secuencia_comparativa'] !== '' ? (int) $_POST['secuencia_comparativa'] : null;
 $nombreArchivo         = isset($_POST['nombre_archivo']) ? trim((string) $_POST['nombre_archivo']) : null;
-$unidadObraId          = isset($_POST['unidad_obra_id']) && $_POST['unidad_obra_id'] !== '' ? (int) $_POST['unidad_obra_id'] : null;
 
 // Validar enum de situación
 $situacionesPermitidas = ['vp', 'ev'];
@@ -182,18 +181,17 @@ try {
     $pdo = getDB();
 
     $sql = "INSERT INTO registros
-                (infra_id, unidad_obra_id, usuario_id, fecha, lat_real, lon_real,
+                (infra_id, usuario_id, fecha, lat_real, lon_real,
                  url_cloudinary, datos_tecnicos, estado_incidencia, observaciones,
                  tipo_foto, secuencia_comparativa, nombre_archivo)
             VALUES
-                (:infra_id, :unidad_obra_id, :usuario_id, NOW(), :lat_real, :lon_real,
+                (:infra_id, :usuario_id, NOW(), :lat_real, :lon_real,
                  :url_cloudinary, :datos_tecnicos, :estado_incidencia, :observaciones,
                  :tipo_foto, :secuencia_comp, :nombre_archivo)";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
         ':infra_id'          => $infraId,
-        ':unidad_obra_id'    => $unidadObraId,
         ':usuario_id'        => $usuarioId,
         ':lat_real'          => $latReal,
         ':lon_real'          => $lonReal,

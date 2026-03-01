@@ -285,9 +285,6 @@
         if (fd.secuencia_comparativa != null) {
             formData.append('secuencia_comparativa', fd.secuencia_comparativa);
         }
-        if (fd.unidad_obra_id) {
-            formData.append('unidad_obra_id', fd.unidad_obra_id);
-        }
         if (fd.datos_tecnicos) {
             formData.append('datos_tecnicos',
                 typeof fd.datos_tecnicos === 'string'
