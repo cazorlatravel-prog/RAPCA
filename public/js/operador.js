@@ -55,6 +55,7 @@
         mapa:    $('#screen-mapa'),
         visitas: $('#screen-visitas'),
         editarVisita: $('#screen-editar-visita'),
+        panel:   $('#screen-panel'),
     };
 
     // Ficha
@@ -270,31 +271,16 @@
     }
 
     function showSyncNotification(ok, fail) {
-        const notification = $('#sync-notification');
-        if (!notification) return;
-
-        let msg = '';
         if (ok > 0 && fail === 0) {
-            msg = `${ok} foto${ok > 1 ? 's' : ''} sincronizada${ok > 1 ? 's' : ''} correctamente`;
-            notification.className = 'sync-notification success';
+            showToast(`${ok} foto${ok > 1 ? 's' : ''} sincronizada${ok > 1 ? 's' : ''} correctamente`, 'success');
         } else if (ok > 0 && fail > 0) {
-            msg = `${ok} subida${ok > 1 ? 's' : ''}, ${fail} con error`;
-            notification.className = 'sync-notification warning';
+            showToast(`${ok} subida${ok > 1 ? 's' : ''}, ${fail} con error`, 'warning', 8000);
         } else {
-            msg = `Error al sincronizar ${fail} foto${fail > 1 ? 's' : ''}`;
-            notification.className = 'sync-notification error';
+            showToast(`Error al sincronizar ${fail} foto${fail > 1 ? 's' : ''}`, 'error', 8000);
         }
 
-        notification.querySelector('.sync-notif-text').textContent = msg;
-        notification.classList.remove('hidden');
-
-        // Si hay fallos, mostrar alerta persistente de no borrar fotos
         if (fail > 0) {
             showUploadFailAlert(fail);
-            // No auto-ocultar para que el operador lo vea
-            setTimeout(() => notification.classList.add('hidden'), 10000);
-        } else {
-            setTimeout(() => notification.classList.add('hidden'), 5000);
         }
     }
 
@@ -373,6 +359,7 @@
                 state.gps.lon = pos.coords.longitude;
                 camGpsDot.classList.add('active');
                 camGpsText.textContent = `ETRS89: ${state.gps.lat.toFixed(7)}, ${state.gps.lon.toFixed(7)}`;
+                updateCamMiniMap();
             },
             () => {
                 camGpsText.textContent = 'ETRS89: Error GPS';
@@ -546,7 +533,7 @@
                 );
             }
         } catch (err) {
-            alert('Error al crear infraestructura: ' + err.message);
+            showToast('Error al crear infraestructura: ' + err.message, 'error');
         }
     }
 
@@ -679,16 +666,23 @@
             camVideo.srcObject = state.stream;
             await camVideo.play();
         } catch (err) {
-            alert('No se pudo acceder a la cámara: ' + err.message);
+            showToast('No se pudo acceder a la cámara: ' + err.message, 'error');
             return;
         }
 
         showScreen('camera');
+
+        // Show compass and mini-map overlays
+        requestCompassPermission();
+        showCompass();
+        showCamMiniMap();
     }
 
     function closeCamera() {
         stopCameraStream();
         camGhost.classList.remove('active');
+        hideCompass();
+        hideCamMiniMap();
         showScreen('ficha');
     }
 
@@ -885,7 +879,7 @@
         // Convert preview canvas to blob
         const blob = await canvasToBlob(previewCanvas, 'image/jpeg', 0.85);
         if (!blob) {
-            alert('Error al procesar la foto.');
+            showToast('Error al procesar la foto', 'error');
             camVideo.play();
             showScreen('ficha');
             return;
@@ -980,7 +974,7 @@
                 showScreen('ficha');
                 showNotification('Foto subida correctamente');
             } else {
-                alert('Error: ' + (data.error || 'Error desconocido'));
+                showToast(data.error || 'Error desconocido', 'error');
                 showScreen('ficha');
             }
         } catch (err) {
@@ -1001,7 +995,7 @@
                 }
             }
 
-            alert('Error de red: ' + err.message);
+            showToast('Error de red: ' + err.message, 'error');
             showScreen('ficha');
         }
     }
@@ -1015,13 +1009,48 @@
         camVideo.srcObject = null;
     }
 
+    // ===================================================================
+    // TOAST NOTIFICATION SYSTEM
+    // ===================================================================
+    function showToast(msg, type = 'info', duration = 3500) {
+        const container = $('#toast-container');
+        if (!container) return;
+
+        const icons = {
+            success: 'bi-check-circle-fill',
+            error: 'bi-x-circle-fill',
+            warning: 'bi-exclamation-triangle-fill',
+            info: 'bi-info-circle-fill',
+        };
+
+        const toast = document.createElement('div');
+        toast.className = `toast toast--${type}`;
+        toast.innerHTML = `
+            <span class="toast-icon"><i class="bi ${icons[type] || icons.info}"></i></span>
+            <span class="toast-text">${escHtml(msg)}</span>
+            <button class="toast-close"><i class="bi bi-x"></i></button>
+        `;
+
+        toast.querySelector('.toast-close').addEventListener('click', () => removeToast(toast));
+        container.appendChild(toast);
+
+        // Auto-remove
+        setTimeout(() => removeToast(toast), duration);
+
+        // Limit to 4 visible toasts
+        const toasts = container.querySelectorAll('.toast:not(.removing)');
+        if (toasts.length > 4) removeToast(toasts[0]);
+    }
+
+    function removeToast(el) {
+        if (!el || el.classList.contains('removing')) return;
+        el.classList.add('removing');
+        el.addEventListener('animationend', () => el.remove());
+    }
+
+    // Alias for backward compatibility
     function showNotification(msg) {
-        const notif = $('#sync-notification');
-        if (!notif) return;
-        const text = notif.querySelector('.sync-notif-text');
-        if (text) text.textContent = msg;
-        notif.classList.remove('hidden');
-        setTimeout(() => notif.classList.add('hidden'), 3000);
+        showToast(msg, 'success');
     }
 
     function updateCounters(seq) {
@@ -1194,11 +1223,11 @@
     // ===================================================================
     async function precacheInfraPhotos() {
         if (!state.infraId) {
-            alert('Selecciona primero una infraestructura');
+            showToast('Selecciona primero una infraestructura', 'warning');
             return;
         }
         if (!navigator.onLine) {
-            alert('Se necesita conexión a Internet para precargar las fotos');
+            showToast('Se necesita conexión para precargar las fotos', 'warning');
             return;
         }
 
@@ -1247,7 +1276,7 @@
 
     async function triggerManualSync() {
         if (!navigator.onLine) {
-            alert('Se necesita conexión a Internet para sincronizar');
+            showToast('Se necesita conexión para sincronizar', 'warning');
             return;
         }
         if (!window.RapcaOffline) return;
@@ -1386,6 +1415,48 @@
         if (btnVisitasBack) btnVisitasBack.addEventListener('click', () => showScreen('ficha'));
         const btnVisitasVolver = $('#btn-visitas-volver');
         if (btnVisitasVolver) btnVisitasVolver.addEventListener('click', () => showScreen('ficha'));
+
+        // Panel de Registros
+        const btnPanelRegistros = $('#btn-panel-registros');
+        if (btnPanelRegistros) btnPanelRegistros.addEventListener('click', openPanelScreen);
+        const btnPanelBack = $('#btn-panel-back');
+        if (btnPanelBack) btnPanelBack.addEventListener('click', () => showScreen('ficha'));
+        const btnPanelVolver = $('#btn-panel-volver');
+        if (btnPanelVolver) btnPanelVolver.addEventListener('click', () => showScreen('ficha'));
+
+        // Panel filters
+        const panelFilterTipo = $('#panel-filter-tipo');
+        if (panelFilterTipo) panelFilterTipo.addEventListener('change', filterPanelRecords);
+        const panelFilterEstado = $('#panel-filter-estado');
+        if (panelFilterEstado) panelFilterEstado.addEventListener('change', filterPanelRecords);
+
+        // Export
+        const btnExportExcel = $('#btn-export-excel');
+        if (btnExportExcel) btnExportExcel.addEventListener('click', openExportModal);
+        const btnCloseExport = $('#btn-close-export');
+        if (btnCloseExport) btnCloseExport.addEventListener('click', () => {
+            const m = $('#modal-export'); if (m) m.classList.add('hidden');
+        });
+        const btnDoExportCsv = $('#btn-do-export-csv');
+        if (btnDoExportCsv) btnDoExportCsv.addEventListener('click', doExportCsv);
+
+        // PDF export
+        const btnExportPdfAll = $('#btn-export-pdf-all');
+        if (btnExportPdfAll) btnExportPdfAll.addEventListener('click', exportAllPdf);
+
+        // Delete local data
+        const btnDeleteLocal = $('#btn-delete-local');
+        if (btnDeleteLocal) btnDeleteLocal.addEventListener('click', openDeleteModal);
+        const btnCloseDelete = $('#btn-close-delete');
+        if (btnCloseDelete) btnCloseDelete.addEventListener('click', () => {
+            const m = $('#modal-delete-local'); if (m) m.classList.add('hidden');
+        });
+        const btnCancelDelete = $('#btn-cancel-delete');
+        if (btnCancelDelete) btnCancelDelete.addEventListener('click', () => {
+            const m = $('#modal-delete-local'); if (m) m.classList.add('hidden');
+        });
+        const btnConfirmDelete = $('#btn-confirm-delete');
+        if (btnConfirmDelete) btnConfirmDelete.addEventListener('click', confirmDeleteLocal);
 
         // Editar visita
         if (btnEditarBack) btnEditarBack.addEventListener('click', () => {
@@ -2730,11 +2801,419 @@
     }
 
     // ===================================================================
+    // COMPASS (Device Orientation)
+    // ===================================================================
+    let compassHeading = null;
+    let compassWatchActive = false;
+
+    function initCompass() {
+        const compassEl = $('#cam-compass');
+        if (!compassEl) return;
+
+        function handleOrientation(e) {
+            let heading = null;
+            if (e.webkitCompassHeading !== undefined) {
+                heading = e.webkitCompassHeading; // iOS
+            } else if (e.alpha !== null) {
+                heading = (360 - e.alpha) % 360; // Android
+            }
+            if (heading !== null) {
+                compassHeading = Math.round(heading);
+                const bearingEl = $('#cam-compass-bearing');
+                if (bearingEl) {
+                    const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+                    const dir = dirs[Math.round(heading / 45) % 8];
+                    bearingEl.textContent = `${compassHeading}° ${dir}`;
+                }
+            }
+        }
+
+        // iOS 13+ requires permission
+        if (typeof DeviceOrientationEvent !== 'undefined' &&
+            typeof DeviceOrientationEvent.requestPermission === 'function') {
+            // Will request on first camera open
+            compassWatchActive = false;
+        } else if ('DeviceOrientationEvent' in window) {
+            window.addEventListener('deviceorientation', handleOrientation, true);
+            compassWatchActive = true;
+        }
+
+        // Store handler for later permission request
+        window._compassHandler = handleOrientation;
+    }
+
+    async function requestCompassPermission() {
+        if (compassWatchActive) return;
+        if (typeof DeviceOrientationEvent !== 'undefined' &&
+            typeof DeviceOrientationEvent.requestPermission === 'function') {
+            try {
+                const perm = await DeviceOrientationEvent.requestPermission();
+                if (perm === 'granted') {
+                    window.addEventListener('deviceorientation', window._compassHandler, true);
+                    compassWatchActive = true;
+                }
+            } catch (e) {
+                console.warn('Compass permission denied:', e);
+            }
+        }
+    }
+
+    function showCompass() {
+        const el = $('#cam-compass');
+        if (el) el.classList.remove('hidden');
+    }
+
+    function hideCompass() {
+        const el = $('#cam-compass');
+        if (el) el.classList.add('hidden');
+    }
+
+    // ===================================================================
+    // CAMERA MINI-MAP
+    // ===================================================================
+    let camMiniMap = null;
+    let camMiniMapMarker = null;
+
+    function initCamMiniMap() {
+        const container = $('#cam-minimap');
+        if (!container || camMiniMap) return;
+
+        camMiniMap = L.map(container, {
+            zoomControl: false,
+            attributionControl: false,
+            dragging: false,
+            scrollWheelZoom: false,
+            touchZoom: false,
+            doubleClickZoom: false,
+            boxZoom: false,
+            keyboard: false,
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+        }).addTo(camMiniMap);
+
+        // Default view
+        const lat = state.gps.lat || 40.4;
+        const lon = state.gps.lon || -3.7;
+        camMiniMap.setView([lat, lon], 16);
+    }
+
+    function updateCamMiniMap() {
+        if (!camMiniMap || !state.gps.lat || !state.gps.lon) return;
+        const latlng = [state.gps.lat, state.gps.lon];
+        camMiniMap.setView(latlng, 16, { animate: false });
+
+        if (camMiniMapMarker) {
+            camMiniMapMarker.setLatLng(latlng);
+        } else {
+            const icon = L.divIcon({
+                className: 'cam-minimap-pin',
+                html: '<div style="width:10px;height:10px;border-radius:50%;background:#ef4444;border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,0.4);"></div>',
+                iconSize: [10, 10],
+                iconAnchor: [5, 5],
+            });
+            camMiniMapMarker = L.marker(latlng, { icon }).addTo(camMiniMap);
+        }
+    }
+
+    function showCamMiniMap() {
+        const el = $('#cam-minimap');
+        if (el) el.classList.remove('hidden');
+        if (!camMiniMap) initCamMiniMap();
+        updateCamMiniMap();
+        // Fix leaflet sizing
+        setTimeout(() => { if (camMiniMap) camMiniMap.invalidateSize(); }, 100);
+    }
+
+    function hideCamMiniMap() {
+        const el = $('#cam-minimap');
+        if (el) el.classList.add('hidden');
+    }
+
+    // ===================================================================
+    // COLLAPSIBLE CARD SECTIONS
+    // ===================================================================
+    function initCollapsibleCards() {
+        const labels = $$('.ficha-body .card-label');
+        labels.forEach(label => {
+            // Skip labels inside search containers
+            if (label.closest('.search-container')) return;
+
+            const card = label.closest('.card');
+            if (!card) return;
+
+            // Wrap content after label in a collapsible div
+            const children = Array.from(card.children);
+            const labelIdx = children.indexOf(label);
+            if (labelIdx < 0) return;
+
+            const contentChildren = children.slice(labelIdx + 1);
+            if (contentChildren.length === 0) return;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'card-collapsible-content';
+            contentChildren.forEach(c => wrapper.appendChild(c));
+            card.appendChild(wrapper);
+
+            // Add collapsible behavior
+            label.classList.add('collapsible');
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-chevron-down collapse-icon';
+            label.appendChild(icon);
+
+            label.addEventListener('click', () => {
+                label.classList.toggle('collapsed');
+                wrapper.classList.toggle('collapsed');
+            });
+        });
+    }
+
+    // ===================================================================
+    // PANEL DE REGISTROS
+    // ===================================================================
+    let panelData = []; // Full records for export
+
+    async function openPanelScreen() {
+        showScreen('panel');
+        const body = $('#panel-body');
+        if (body) body.innerHTML = '<div class="visitas-loading"><div class="spinner"></div><span>Cargando registros...</span></div>';
+
+        try {
+            const res = await fetch(
+                `${CFG.endpoints.registrosMapa}?usuario_id=${CFG.usuarioId}&limit=500`
+            );
+            const data = await res.json();
+
+            if (!data.ok || !data.registros || data.registros.length === 0) {
+                if (body) body.innerHTML = '<div class="panel-empty"><i class="bi bi-clipboard-x"></i><p>No hay registros</p></div>';
+                panelData = [];
+                return;
+            }
+
+            panelData = data.registros;
+            renderPanelRecords(panelData);
+        } catch (err) {
+            if (body) body.innerHTML = '<div class="panel-empty"><i class="bi bi-wifi-off"></i><p>Error de conexión</p></div>';
+        }
+    }
+
+    function renderPanelRecords(records) {
+        const body = $('#panel-body');
+        if (!body) return;
+
+        // Summary stats
+        const totalAlea = records.filter(r => r.tipo_foto === 'aleatorio').length;
+        const totalComp = records.filter(r => r.tipo_foto === 'comparativo').length;
+
+        let html = `
+            <div class="panel-summary">
+                <div class="panel-stat"><div class="panel-stat-value">${records.length}</div><div class="panel-stat-label">Total</div></div>
+                <div class="panel-stat"><div class="panel-stat-value">${totalAlea}</div><div class="panel-stat-label">Aleatorias</div></div>
+                <div class="panel-stat"><div class="panel-stat-value">${totalComp}</div><div class="panel-stat-label">Comparativas</div></div>
+            </div>`;
+
+        records.forEach(r => {
+            const fecha = new Date(r.fecha).toLocaleString('es-ES', {
+                timeZone: 'Europe/Madrid', day: '2-digit', month: '2-digit', year: '2-digit',
+                hour: '2-digit', minute: '2-digit',
+            });
+            const tipoClass = r.tipo_foto === 'comparativo' ? 'comparativo' : 'aleatorio';
+            const estadoClass = r.estado_incidencia || 'antes';
+
+            html += `<div class="panel-record" data-id="${r.id}">
+                <img class="panel-record-thumb" src="${escHtml(r.url_cloudinary || '')}" alt="" loading="lazy">
+                <div class="panel-record-info">
+                    <div class="panel-record-title">${escHtml(r.infra_nombre || r.nombre_archivo || '--')}</div>
+                    <div class="panel-record-meta">${fecha} · ${escHtml(r.usuario_nombre || '')}</div>
+                    <div class="panel-record-badges">
+                        <span class="panel-badge panel-badge--${tipoClass}">${r.tipo_foto === 'comparativo' ? 'COMP' : 'ALEA'}</span>
+                        <span class="panel-badge panel-badge--${estadoClass}">${(r.estado_incidencia || 'antes').toUpperCase()}</span>
+                    </div>
+                </div>
+                <div class="panel-record-actions">
+                    <button class="panel-record-action panel-record-action--pdf" data-id="${r.id}" title="PDF"><i class="bi bi-file-pdf"></i></button>
+                    <button class="panel-record-action panel-record-action--edit" data-id="${r.id}" title="Editar"><i class="bi bi-pencil"></i></button>
+                </div>
+            </div>`;
+        });
+
+        body.innerHTML = html;
+        updatePanelSubtitle(records.length);
+
+        // Bind edit and PDF actions
+        body.querySelectorAll('.panel-record-action--edit').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const regId = parseInt(btn.dataset.id);
+                if (window._editarRegistro) window._editarRegistro(regId);
+            });
+        });
+
+        body.querySelectorAll('.panel-record-action--pdf').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const regId = parseInt(btn.dataset.id);
+                exportSinglePdf(regId);
+            });
+        });
+    }
+
+    function updatePanelSubtitle(count) {
+        const sub = $('#panel-subtitle');
+        if (sub) sub.textContent = `${count} registro${count !== 1 ? 's' : ''}`;
+        const badge = $('#count-panel');
+        if (badge) badge.textContent = count;
+    }
+
+    function filterPanelRecords() {
+        const tipo = ($('#panel-filter-tipo') || {}).value || '';
+        const estado = ($('#panel-filter-estado') || {}).value || '';
+
+        let filtered = panelData;
+        if (tipo) filtered = filtered.filter(r => r.tipo_foto === tipo);
+        if (estado) filtered = filtered.filter(r => r.estado_incidencia === estado);
+
+        renderPanelRecords(filtered);
+    }
+
+    // ===================================================================
+    // EXPORT CSV / EXCEL
+    // ===================================================================
+    function openExportModal() {
+        // Populate year filter
+        const yearSelect = $('#export-filter-year');
+        if (yearSelect && panelData.length > 0) {
+            const years = [...new Set(panelData.map(r => new Date(r.fecha).getFullYear()))].sort((a, b) => b - a);
+            let html = '<option value="">Todos</option>';
+            years.forEach(y => { html += `<option value="${y}">${y}</option>`; });
+            yearSelect.innerHTML = html;
+        }
+        const modal = $('#modal-export');
+        if (modal) modal.classList.remove('hidden');
+    }
+
+    function doExportCsv() {
+        const tipo = ($('#export-filter-tipo') || {}).value || '';
+        const estado = ($('#export-filter-estado') || {}).value || '';
+        const year = ($('#export-filter-year') || {}).value || '';
+
+        let data = panelData;
+        if (tipo) data = data.filter(r => r.tipo_foto === tipo);
+        if (estado) data = data.filter(r => r.estado_incidencia === estado);
+        if (year) data = data.filter(r => new Date(r.fecha).getFullYear() === parseInt(year));
+
+        if (data.length === 0) {
+            showToast('No hay datos para exportar con esos filtros', 'warning');
+            return;
+        }
+
+        // Build CSV
+        const sep = ';';
+        const headers = ['ID', 'Infraestructura', 'Código', 'Fecha', 'Estado', 'Tipo Foto', 'Secuencia', 'Latitud', 'Longitud', 'Observaciones', 'Operador', 'Archivo', 'URL Foto'];
+        const rows = data.map(r => [
+            r.id,
+            `"${(r.infra_nombre || '').replace(/"/g, '""')}"`,
+            r.codigo_unico || '',
+            r.fecha || '',
+            r.estado_incidencia || '',
+            r.tipo_foto || '',
+            r.secuencia_comparativa || '',
+            r.lat_real || '',
+            r.lon_real || '',
+            `"${(r.observaciones || '').replace(/"/g, '""')}"`,
+            `"${(r.usuario_nombre || '').replace(/"/g, '""')}"`,
+            r.nombre_archivo || '',
+            r.url_cloudinary || '',
+        ].join(sep));
+
+        const bom = '\uFEFF'; // UTF-8 BOM for Excel
+        const csv = bom + headers.join(sep) + '\n' + rows.join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `RAPCA_registros_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast(`${data.length} registros exportados a CSV`, 'success');
+        const modal = $('#modal-export');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    // ===================================================================
+    // EXPORT SINGLE PDF
+    // ===================================================================
+    function exportSinglePdf(registroId) {
+        if (!CFG.endpoints.exportPdf) {
+            showToast('Exportar PDF no disponible', 'warning');
+            return;
+        }
+        const url = `${CFG.endpoints.exportPdf}?registro_id=${registroId}&usuario_id=${CFG.usuarioId}`;
+        window.open(url, '_blank');
+    }
+
+    function exportAllPdf() {
+        if (!CFG.endpoints.exportPdf) {
+            showToast('Exportar PDF no disponible', 'warning');
+            return;
+        }
+        const url = `${CFG.endpoints.exportPdf}?usuario_id=${CFG.usuarioId}&all=1`;
+        window.open(url, '_blank');
+    }
+
+    // ===================================================================
+    // DELETE LOCAL DATA
+    // ===================================================================
+    function openDeleteModal() {
+        const modal = $('#modal-delete-local');
+        if (modal) modal.classList.remove('hidden');
+    }
+
+    async function confirmDeleteLocal() {
+        const modal = $('#modal-delete-local');
+        if (modal) modal.classList.add('hidden');
+
+        try {
+            // 1. Clear IndexedDB
+            const dbs = await window.indexedDB.databases();
+            for (const db of dbs) {
+                if (db.name) {
+                    window.indexedDB.deleteDatabase(db.name);
+                }
+            }
+
+            // 2. Clear Service Worker cache
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                for (const name of cacheNames) {
+                    await caches.delete(name);
+                }
+            }
+
+            // 3. Reset offline module state
+            const banner = $('#offline-queue-banner');
+            if (banner) banner.classList.add('hidden');
+            const syncBar = $('#sync-bar');
+            if (syncBar) syncBar.classList.add('hidden');
+
+            showToast('Datos locales borrados correctamente', 'success');
+        } catch (err) {
+            showToast('Error al borrar datos: ' + err.message, 'error');
+        }
+    }
+
+    // ===================================================================
     // START
     // ===================================================================
     document.addEventListener('DOMContentLoaded', () => {
         init();
         initPWAInstall();
+        initCompass();
+        initCollapsibleCards();
     });
 
 })();

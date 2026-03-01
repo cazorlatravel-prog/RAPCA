@@ -168,6 +168,11 @@ if ($initials === '') $initials = 'OP';
                     <div class="foto-btn-text"><strong>Mis Visitas</strong><small>Ver y editar registros anteriores</small></div>
                     <span class="foto-count"><i class="bi bi-chevron-right"></i></span>
                 </button>
+                <button type="button" id="btn-panel-registros" class="foto-btn foto-btn--panel">
+                    <div class="foto-btn-icon"><i class="bi bi-clipboard-data"></i></div>
+                    <div class="foto-btn-text"><strong>Panel</strong><small>Registros, exportar Excel/PDF, borrar datos</small></div>
+                    <span class="foto-count" id="count-panel">0</span>
+                </button>
             </div>
 
             <div id="sync-bar" class="sync-bar hidden">
@@ -204,6 +209,11 @@ if ($initials === '') $initials = 'OP';
             <div class="cam-gps-dot" id="cam-gps-dot"></div>
             <span id="cam-gps-text">ETRS89: --</span>
         </div>
+        <div id="cam-compass" class="cam-compass hidden">
+            <i class="bi bi-compass"></i>
+            <span id="cam-compass-bearing">--°</span>
+        </div>
+        <div id="cam-minimap" class="cam-minimap hidden"></div>
         <video id="cam-video" autoplay playsinline></video>
         <img id="cam-ghost" src="" alt="" class="cam-ghost">
         <canvas id="cam-capture" class="hidden-canvas"></canvas>
@@ -329,6 +339,39 @@ if ($initials === '') $initials = 'OP';
         </div>
     </div>
 
+    <!-- PANTALLA 7: PANEL DE REGISTROS -->
+    <div id="screen-panel" class="screen">
+        <div class="visitas-topbar">
+            <button type="button" id="btn-panel-back" class="cam-btn-back"><i class="bi bi-arrow-left"></i></button>
+            <div class="visitas-title"><strong>Panel de Registros</strong><span id="panel-subtitle">Todos los registros</span></div>
+            <div style="width:40px;"></div>
+        </div>
+        <div class="panel-filters">
+            <select id="panel-filter-tipo" class="input-field input-field--sm">
+                <option value="">Tipo: Todos</option>
+                <option value="aleatorio">Aleatorio</option>
+                <option value="comparativo">Comparativo</option>
+            </select>
+            <select id="panel-filter-estado" class="input-field input-field--sm">
+                <option value="">Estado: Todos</option>
+                <option value="antes">Antes</option>
+                <option value="durante">Durante</option>
+                <option value="despues">Después</option>
+            </select>
+            <div class="panel-actions-row">
+                <button type="button" id="btn-export-excel" class="panel-action-btn panel-action--excel"><i class="bi bi-file-earmark-spreadsheet"></i> Excel</button>
+                <button type="button" id="btn-export-pdf-all" class="panel-action-btn panel-action--pdf"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+                <button type="button" id="btn-delete-local" class="panel-action-btn panel-action--delete"><i class="bi bi-trash3"></i> Borrar local</button>
+            </div>
+        </div>
+        <div class="panel-body" id="panel-body">
+            <div class="visitas-loading"><div class="spinner"></div><span>Cargando registros...</span></div>
+        </div>
+        <div class="visitas-footer">
+            <button type="button" id="btn-panel-volver" class="btn-volver-rojo"><i class="bi bi-arrow-left-circle-fill"></i> Volver</button>
+        </div>
+    </div>
+
     <!-- Overlays -->
     <div id="upload-overlay" class="overlay hidden"><div class="spinner"></div><span>Subiendo foto...</span></div>
 
@@ -346,6 +389,58 @@ if ($initials === '') $initials = 'OP';
             <div class="precache-body">
                 <div class="precache-progress"><div id="precache-progress-bar" class="precache-progress-fill"></div></div>
                 <p id="precache-progress-text" class="precache-text">Preparando...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Export filter modal -->
+    <div id="modal-export" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header"><h3><i class="bi bi-funnel"></i> Exportar con filtros</h3><button type="button" id="btn-close-export" class="modal-close"><i class="bi bi-x-lg"></i></button></div>
+            <div class="modal-body-form">
+                <label class="modal-label">Tipo de foto</label>
+                <select id="export-filter-tipo" class="input-field">
+                    <option value="">Todos</option>
+                    <option value="aleatorio">Aleatorio</option>
+                    <option value="comparativo">Comparativo</option>
+                </select>
+                <label class="modal-label">Estado</label>
+                <select id="export-filter-estado" class="input-field">
+                    <option value="">Todos</option>
+                    <option value="antes">Antes</option>
+                    <option value="durante">Durante</option>
+                    <option value="despues">Después</option>
+                </select>
+                <label class="modal-label">Año</label>
+                <select id="export-filter-year" class="input-field">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btn-do-export-csv" class="preview-btn preview-btn--primary"><i class="bi bi-file-earmark-spreadsheet"></i> Exportar CSV</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete confirmation modal -->
+    <div id="modal-delete-local" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header"><h3><i class="bi bi-exclamation-triangle"></i> Borrar datos locales</h3><button type="button" id="btn-close-delete" class="modal-close"><i class="bi bi-x-lg"></i></button></div>
+            <div class="modal-body-form" style="text-align:center;padding:16px;">
+                <p style="margin-bottom:8px;"><strong>Se eliminará:</strong></p>
+                <ul style="text-align:left;font-size:0.85rem;color:#6b7280;list-style:disc inside;margin-bottom:12px;">
+                    <li>Cola de fotos pendientes (IndexedDB)</li>
+                    <li>Fotos precargadas para ghosting</li>
+                    <li>Caché del service worker</li>
+                </ul>
+                <p style="font-size:0.8rem;color:#dc3545;"><i class="bi bi-exclamation-circle"></i> Las fotos ya subidas al servidor NO se borran.</p>
+            </div>
+            <div class="modal-footer" style="gap:8px;">
+                <button type="button" id="btn-cancel-delete" class="preview-btn preview-btn--secondary">Cancelar</button>
+                <button type="button" id="btn-confirm-delete" class="preview-btn preview-btn--danger"><i class="bi bi-trash3"></i> Borrar todo</button>
             </div>
         </div>
     </div>
@@ -386,6 +481,7 @@ if ($initials === '') $initials = 'OP';
                 registrosMapa: 'api/registros_mapa.php',
                 capasKml: 'api/capas_kml.php',
                 visitas: 'api/visitas.php',
+                exportPdf: 'api/export_pdf.php',
             }
         };
     </script>
