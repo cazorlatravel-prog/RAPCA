@@ -129,7 +129,7 @@ try {
     }
 
     // --- Pre-migration: eliminar columnas antiguas de infraestructuras ---
-    $dropCols = ['codigo_unico', 'tipo', 'provincia', 'descripcion'];
+    $dropCols = ['codigo_unico', 'tipo', 'descripcion'];
     foreach ($dropCols as $col) {
         try {
             $pdo->exec("ALTER TABLE infraestructuras DROP COLUMN $col");
