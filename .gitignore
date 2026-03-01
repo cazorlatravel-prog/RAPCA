@@ -4,6 +4,11 @@
 # Entorno
 .env
 .env.local
+.env.example
+
+# Documentacion IA / planificacion
+CLAUDE.md
+PLAN_*.md
 
 # IDE
 .idea/
