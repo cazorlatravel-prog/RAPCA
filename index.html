@@ -3,25 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAPCA - Tu APP de recogida de datos en Campo</title>
-    <meta name="description" content="RAPCA - Plataforma de inspecciones en campo. Fotos geolocalizadas con watermark GPS, anotaciones en foto con círculo ajustable, navegación con alertas de proximidad, capas WMS (Ortofoto, Topográfico), ghosting comparativo, capas KML, informes PDF, exportación CSV y modo offline.">
+    <title>RAPCA - Registro y Análisis de Puntos de Control</title>
+    <meta name="description" content="RAPCA - Plataforma de inspecciones en campo. Fotos geolocalizadas, navegación GPS, capas WMS, informes PDF, exportación CSV y modo offline.">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         /* =========================================================
-           RAPCA Landing Page
-           Modern, clean, mobile-first design
+           RAPCA - Landing funcional
+           Hub de trabajo de campo, mobile-first
            ========================================================= */
         :root {
-            --bg-primary: #0a0f1e;
+            --bg: #0a0f1e;
             --bg-card: #111827;
-            --bg-glass: rgba(17, 24, 39, 0.6);
+            --bg-glass: rgba(17, 24, 39, 0.7);
             --accent: #3b82f6;
             --accent-light: #60a5fa;
             --accent-glow: rgba(59, 130, 246, 0.25);
             --purple: #a855f7;
             --green: #22c55e;
             --amber: #f59e0b;
+            --red: #ef4444;
+            --teal: #14b8a6;
+            --cyan: #06b6d4;
+            --rose: #f43f5e;
+            --indigo: #6366f1;
+            --orange: #f97316;
+            --lime: #84cc16;
+            --sky: #0ea5e9;
             --text: #f1f5f9;
             --text-muted: #94a3b8;
             --border: rgba(255, 255, 255, 0.06);
@@ -29,18 +37,17 @@
         }
 
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
         html { scroll-behavior: smooth; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
-            background: var(--bg-primary);
+            background: var(--bg);
             color: var(--text);
             line-height: 1.6;
-            overflow-x: hidden;
+            min-height: 100vh;
         }
 
-        /* ---- Animated background ---- */
+        /* Background */
         .bg-grid {
             position: fixed; inset: 0; z-index: 0; pointer-events: none;
             background-image:
@@ -49,672 +56,312 @@
             background-size: 60px 60px;
         }
 
-        .bg-glow {
-            position: fixed; z-index: 0; pointer-events: none;
-            width: 600px; height: 600px; border-radius: 50%;
-            filter: blur(120px); opacity: 0.12;
-        }
-
-        .bg-glow--1 { top: -200px; right: -100px; background: var(--accent); }
-        .bg-glow--2 { bottom: -250px; left: -100px; background: var(--purple); }
-        .bg-glow--3 { top: 40%; left: 50%; transform: translateX(-50%); background: var(--green); opacity: 0.05; }
-
-        /* ---- Container ---- */
         .container {
             max-width: 1120px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 0 16px;
             position: relative; z-index: 1;
         }
 
-        /* ---- NAV ---- */
-        .nav {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-            padding: 0;
-            background: rgba(10, 15, 30, 0.75);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
+        /* ---- HEADER ---- */
+        .header {
+            padding: 24px 0 0;
         }
 
-        .nav .container {
-            display: flex; align-items: center; justify-content: space-between;
-            height: 64px;
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
         }
 
-        .nav-brand {
+        .brand {
             display: flex; align-items: center; gap: 10px;
-            font-size: 1.15rem; font-weight: 800; letter-spacing: 1.5px;
-            color: #fff; text-decoration: none;
+            text-decoration: none; color: #fff;
         }
 
-        .nav-brand-icon {
-            width: 36px; height: 36px;
+        .brand-icon {
+            width: 40px; height: 40px;
             background: linear-gradient(135deg, var(--accent), var(--purple));
-            border-radius: 10px;
+            border-radius: 12px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1rem; color: #fff;
+            font-size: 1.1rem; color: #fff;
         }
 
-        .nav-links { display: flex; align-items: center; gap: 4px; }
+        .brand-name {
+            font-size: 1.2rem; font-weight: 800; letter-spacing: 1.5px;
+        }
 
-        .nav-link {
-            padding: 8px 16px;
+        .brand-sub {
+            font-size: 0.65rem; color: var(--text-muted);
+            letter-spacing: 0.3px; font-weight: 500;
+        }
+
+        .header-login {
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .btn-login {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 10px 20px;
             border-radius: 10px;
-            font-size: 0.8rem; font-weight: 600;
-            color: var(--text-muted);
+            font-size: 0.82rem; font-weight: 700;
             text-decoration: none;
             transition: all 0.2s;
-        }
-
-        .nav-link:hover { color: #fff; background: rgba(255,255,255,0.06); }
-
-        .nav-link--cta {
-            background: var(--accent);
-            color: #fff !important;
-            margin-left: 4px;
-        }
-
-        .nav-link--cta:hover {
-            background: #2563eb;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 16px var(--accent-glow);
-        }
-
-        /* ---- HERO ---- */
-        .hero {
-            min-height: 100vh;
-            display: flex; align-items: center;
-            padding: 100px 0 60px;
-        }
-
-        .hero-inner {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 60px;
-            align-items: center;
-        }
-
-        .hero-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: rgba(59,130,246,0.08);
-            border: 1px solid rgba(59,130,246,0.18);
-            border-radius: 30px;
-            padding: 6px 18px 6px 12px;
-            font-size: 0.75rem; font-weight: 600;
-            color: var(--accent-light);
-            margin-bottom: 24px;
-        }
-
-        .hero-badge-dot {
-            width: 8px; height: 8px; border-radius: 50%;
-            background: var(--green);
-            animation: pulse 2s ease infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
-            50% { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
-        }
-
-        .hero h1 {
-            font-size: 3.4rem;
-            font-weight: 800;
-            line-height: 1.08;
-            margin-bottom: 20px;
-            letter-spacing: -0.5px;
-        }
-
-        .hero h1 .gradient-text {
-            background: linear-gradient(135deg, var(--accent-light) 0%, var(--purple) 100%);
-            -webkit-background-clip: text; background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .hero-desc {
-            font-size: 1.1rem;
-            color: var(--text-muted);
-            max-width: 480px;
-            margin-bottom: 36px;
-            line-height: 1.7;
-        }
-
-        .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
-
-        .btn {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 14px 28px;
-            border-radius: 12px;
-            font-size: 0.9rem; font-weight: 700;
-            text-decoration: none;
-            transition: all 0.25s;
             border: none; cursor: pointer;
         }
 
-        .btn--primary {
-            background: linear-gradient(135deg, var(--accent), #2563eb);
+        .btn-login--primary {
+            background: var(--accent);
             color: #fff;
-            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+        .btn-login--primary:hover {
+            background: #2563eb;
+            box-shadow: 0 4px 16px var(--accent-glow);
         }
 
-        .btn--primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(59,130,246,0.4);
-        }
-
-        .btn--outline {
-            background: transparent;
-            color: var(--text);
-            border: 1px solid rgba(255,255,255,0.12);
-        }
-
-        .btn--outline:hover {
+        .btn-login--ghost {
             background: rgba(255,255,255,0.05);
-            border-color: rgba(255,255,255,0.2);
-        }
-
-        /* ---- Hero phone mockup ---- */
-        .hero-visual {
-            position: relative;
-            display: flex; justify-content: center;
-        }
-
-        .phone-mockup {
-            width: 280px;
-            background: #0f172a;
-            border-radius: 36px;
-            border: 2px solid rgba(255,255,255,0.08);
-            overflow: hidden;
-            box-shadow:
-                0 40px 80px rgba(0,0,0,0.5),
-                0 0 0 1px rgba(255,255,255,0.04),
-                inset 0 1px 0 rgba(255,255,255,0.06);
-            position: relative; z-index: 2;
-        }
-
-        .phone-notch {
-            width: 100px; height: 30px;
-            background: #000; border-radius: 0 0 20px 20px;
-            margin: 0 auto;
-        }
-
-        .phone-screen { padding: 20px 16px; }
-
-        .phone-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .phone-brand {
-            font-size: 0.7rem; font-weight: 800; letter-spacing: 2px;
-            color: rgba(255,255,255,0.8);
-        }
-
-        .phone-status {
-            display: flex; align-items: center; gap: 5px;
-            font-size: 0.6rem; font-weight: 700;
-            color: var(--green);
-        }
-
-        .phone-status-dot {
-            width: 6px; height: 6px; border-radius: 50%;
-            background: var(--green);
-            box-shadow: 0 0 6px rgba(34,197,94,0.5);
-        }
-
-        .phone-field {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 12px;
-            padding: 12px 14px;
-            margin-bottom: 10px;
-        }
-
-        .phone-field-label {
-            font-size: 0.55rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.8px;
-            color: rgba(255,255,255,0.35);
-            margin-bottom: 4px;
-        }
-
-        .phone-field-value { font-size: 0.78rem; font-weight: 600; }
-
-        .phone-field--ok {
-            border-color: rgba(34,197,94,0.25);
-            background: rgba(34,197,94,0.06);
-        }
-
-        .phone-field--ok .phone-field-value { color: #86efac; }
-
-        .phone-btn-row { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
-
-        .phone-btn {
-            display: flex; align-items: center; gap: 10px;
-            padding: 11px 14px;
-            border-radius: 12px;
-            font-size: 0.7rem; font-weight: 700;
-        }
-
-        .phone-btn-icon {
-            width: 32px; height: 32px; border-radius: 9px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.85rem; flex-shrink: 0;
-        }
-
-        .phone-btn--blue {
-            background: rgba(59,130,246,0.08);
-            border: 1px solid rgba(59,130,246,0.15);
-            color: #93c5fd;
-        }
-        .phone-btn--blue .phone-btn-icon { background: rgba(59,130,246,0.2); color: #60a5fa; }
-
-        .phone-btn--purple {
-            background: rgba(168,85,247,0.08);
-            border: 1px solid rgba(168,85,247,0.15);
-            color: #d8b4fe;
-        }
-        .phone-btn--purple .phone-btn-icon { background: rgba(168,85,247,0.2); color: #c084fc; }
-
-        .phone-btn--green {
-            background: rgba(34,197,94,0.08);
-            border: 1px solid rgba(34,197,94,0.15);
-            color: #86efac;
-        }
-        .phone-btn--green .phone-btn-icon { background: rgba(34,197,94,0.2); color: #4ade80; }
-
-        /* Floating context cards */
-        .float-card {
-            position: absolute;
-            background: var(--bg-glass);
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 14px;
-            padding: 14px 18px;
-            font-size: 0.75rem;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.35);
-            z-index: 3;
-            white-space: nowrap;
-        }
-
-        .float-card--gps {
-            top: 18%; right: -40px;
-            animation: floatUp 6s ease-in-out infinite;
-        }
-
-        .float-card--offline {
-            bottom: 22%; left: -50px;
-            animation: floatUp 6s ease-in-out infinite 2s;
-        }
-
-        .float-card-icon { font-size: 1.2rem; margin-bottom: 6px; }
-        .float-card-label { font-weight: 700; margin-bottom: 2px; }
-        .float-card-value { font-size: 0.65rem; color: var(--text-muted); }
-
-        @keyframes floatUp {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-12px); }
-        }
-
-        /* ---- SECTION ---- */
-        .section { padding: 100px 0; }
-
-        .section-label {
-            display: inline-flex; align-items: center; gap: 6px;
-            font-size: 0.72rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 2px;
-            color: var(--accent-light);
-            margin-bottom: 14px;
-        }
-
-        .section-title {
-            font-size: 2.3rem; font-weight: 800;
-            margin-bottom: 14px;
-            letter-spacing: -0.3px;
-        }
-
-        .section-desc {
             color: var(--text-muted);
-            max-width: 560px;
-            font-size: 1rem;
-            margin-bottom: 48px;
-            line-height: 1.7;
+            border: 1px solid var(--border);
+        }
+        .btn-login--ghost:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
         }
 
-        /* ---- FEATURES GRID ---- */
-        .features-grid {
+        /* ---- QUICK ACCESS ---- */
+        .quick-access {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
+            gap: 16px;
+            margin-bottom: 48px;
         }
 
-        .feature-card {
+        .qa-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 30px 24px;
-            transition: all 0.3s;
+            padding: 24px 20px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.25s;
+            display: flex;
+            align-items: center;
+            gap: 16px;
             position: relative;
             overflow: hidden;
         }
 
-        .feature-card::before {
+        .qa-card::after {
+            content: '';
+            position: absolute; bottom: 0; left: 0; right: 0;
+            height: 3px; opacity: 0;
+            transition: opacity 0.25s;
+        }
+
+        .qa-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 36px rgba(0,0,0,0.3);
+        }
+        .qa-card:hover::after { opacity: 1; }
+
+        .qa-card--operador::after { background: linear-gradient(90deg, var(--accent), var(--accent-light)); }
+        .qa-card--admin::after { background: linear-gradient(90deg, var(--purple), #c084fc); }
+        .qa-card--super::after { background: linear-gradient(90deg, var(--amber), #fbbf24); }
+
+        .qa-icon {
+            width: 52px; height: 52px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .qa-card--operador .qa-icon { background: rgba(59,130,246,0.12); color: #60a5fa; }
+        .qa-card--admin .qa-icon { background: rgba(168,85,247,0.12); color: #c084fc; }
+        .qa-card--super .qa-icon { background: rgba(245,158,11,0.12); color: #fbbf24; }
+
+        .qa-info h3 {
+            font-size: 0.95rem; font-weight: 700;
+            margin-bottom: 2px;
+        }
+        .qa-info p {
+            font-size: 0.75rem; color: var(--text-muted);
+        }
+
+        .qa-arrow {
+            margin-left: auto;
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.15);
+            transition: color 0.2s;
+        }
+        .qa-card:hover .qa-arrow { color: rgba(255,255,255,0.5); }
+
+        /* ---- SECTION ---- */
+        .section {
+            padding: 0 0 48px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-top: 8px;
+        }
+
+        .section-header::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--border), transparent);
+        }
+
+        .section-tag {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.72rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 2px;
+            white-space: nowrap;
+        }
+
+        .section-tag--blue { color: var(--accent-light); }
+        .section-tag--purple { color: #c084fc; }
+        .section-tag--teal { color: #2dd4bf; }
+        .section-tag--amber { color: #fbbf24; }
+
+        /* ---- FEATURE CARDS ---- */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .f-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px 20px;
+            transition: all 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .f-card::before {
             content: '';
             position: absolute; top: 0; left: 0; right: 0;
             height: 2px;
             background: linear-gradient(90deg, transparent, var(--accent), transparent);
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: opacity 0.25s;
         }
 
-        .feature-card:hover {
-            border-color: rgba(59,130,246,0.15);
-            transform: translateY(-4px);
-            box-shadow: 0 16px 48px rgba(0,0,0,0.25);
+        .f-card:hover {
+            border-color: rgba(59,130,246,0.12);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 36px rgba(0,0,0,0.2);
         }
 
-        .feature-card:hover::before { opacity: 1; }
+        .f-card:hover::before { opacity: 1; }
 
-        .feature-icon {
-            width: 48px; height: 48px;
-            border-radius: 12px;
+        .f-icon {
+            width: 42px; height: 42px;
+            border-radius: 11px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.3rem;
-            margin-bottom: 18px;
+            font-size: 1.15rem;
+            margin-bottom: 14px;
         }
 
-        .feature-icon--blue { background: rgba(59,130,246,0.12); color: #60a5fa; }
-        .feature-icon--purple { background: rgba(168,85,247,0.12); color: #c084fc; }
-        .feature-icon--green { background: rgba(34,197,94,0.12); color: #4ade80; }
-        .feature-icon--amber { background: rgba(245,158,11,0.12); color: #fbbf24; }
-        .feature-icon--red { background: rgba(239,68,68,0.12); color: #f87171; }
-        .feature-icon--teal { background: rgba(20,184,166,0.12); color: #2dd4bf; }
-        .feature-icon--cyan { background: rgba(6,182,212,0.12); color: #22d3ee; }
-        .feature-icon--rose { background: rgba(244,63,94,0.12); color: #fb7185; }
-        .feature-icon--indigo { background: rgba(99,102,241,0.12); color: #818cf8; }
-        .feature-icon--lime { background: rgba(132,204,22,0.12); color: #a3e635; }
-        .feature-icon--orange { background: rgba(249,115,22,0.12); color: #fb923c; }
-        .feature-icon--sky { background: rgba(14,165,233,0.12); color: #38bdf8; }
+        .f-icon--blue { background: rgba(59,130,246,0.12); color: #60a5fa; }
+        .f-icon--purple { background: rgba(168,85,247,0.12); color: #c084fc; }
+        .f-icon--green { background: rgba(34,197,94,0.12); color: #4ade80; }
+        .f-icon--amber { background: rgba(245,158,11,0.12); color: #fbbf24; }
+        .f-icon--red { background: rgba(239,68,68,0.12); color: #f87171; }
+        .f-icon--teal { background: rgba(20,184,166,0.12); color: #2dd4bf; }
+        .f-icon--cyan { background: rgba(6,182,212,0.12); color: #22d3ee; }
+        .f-icon--rose { background: rgba(244,63,94,0.12); color: #fb7185; }
+        .f-icon--indigo { background: rgba(99,102,241,0.12); color: #818cf8; }
+        .f-icon--lime { background: rgba(132,204,22,0.12); color: #a3e635; }
+        .f-icon--orange { background: rgba(249,115,22,0.12); color: #fb923c; }
+        .f-icon--sky { background: rgba(14,165,233,0.12); color: #38bdf8; }
 
-        .feature-card h3 {
-            font-size: 1rem; font-weight: 700;
-            margin-bottom: 8px;
+        .f-card h3 {
+            font-size: 0.92rem; font-weight: 700;
+            margin-bottom: 6px;
         }
 
-        .feature-card p {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            line-height: 1.6;
-        }
-
-        /* ---- Sub-section titles ---- */
-        .subsection-header {
-            margin-top: 48px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .subsection-header::before,
-        .subsection-header::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--border), transparent);
-        }
-
-        .subsection-title {
+        .f-card p {
             font-size: 0.78rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 2.5px;
             color: var(--text-muted);
-            white-space: nowrap;
+            line-height: 1.55;
         }
 
-        /* ---- STEPS ---- */
-        .steps-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 24px;
+        /* ---- TECH STRIP ---- */
+        .tech-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 32px 0 48px;
+            justify-content: center;
         }
 
-        .step-card { text-align: center; position: relative; }
-
-        .step-number {
-            width: 56px; height: 56px;
-            border-radius: 50%;
-            border: 2px solid rgba(59,130,246,0.25);
-            display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 18px;
-            font-size: 1.2rem; font-weight: 800;
-            color: var(--accent-light);
-            background: rgba(59,130,246,0.05);
-        }
-
-        .step-card h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; }
-        .step-card p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
-
-        .step-card:not(:last-child)::before {
-            content: '';
-            position: absolute; top: 28px;
-            left: calc(50% + 36px);
-            width: calc(100% - 72px);
-            height: 1px;
-            background: linear-gradient(90deg, rgba(59,130,246,0.3), rgba(59,130,246,0.03));
-        }
-
-        /* ---- STATS ---- */
-        .stats-bar {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 20px;
-            padding: 64px 0;
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .stat { text-align: center; }
-
-        .stat-value {
-            font-size: 2.2rem; font-weight: 800;
-            background: linear-gradient(135deg, var(--accent-light), var(--purple));
-            -webkit-background-clip: text; background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .stat-label { font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; }
-
-        /* ---- ACCESS CARDS ---- */
-        .access-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
-        }
-
-        .access-card {
-            background: var(--bg-card);
+        .tech-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.03);
             border: 1px solid var(--border);
             border-radius: 20px;
-            padding: 40px 28px;
-            text-align: center;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .access-card::after {
-            content: '';
-            position: absolute; bottom: 0; left: 0; right: 0;
-            height: 3px;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .access-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-        }
-
-        .access-card:hover::after { opacity: 1; }
-
-        .access-card--operator::after { background: linear-gradient(90deg, var(--accent), var(--accent-light)); }
-        .access-card--admin::after { background: linear-gradient(90deg, var(--purple), #c084fc); }
-        .access-card--super::after { background: linear-gradient(90deg, var(--amber), #fbbf24); }
-
-        .access-icon {
-            width: 72px; height: 72px;
-            border-radius: 20px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.8rem;
-            margin: 0 auto 20px;
-        }
-
-        .access-card--operator .access-icon { background: rgba(59,130,246,0.1); color: #60a5fa; }
-        .access-card--admin .access-icon { background: rgba(168,85,247,0.1); color: #c084fc; }
-        .access-card--super .access-icon { background: rgba(245,158,11,0.1); color: #fbbf24; }
-
-        .access-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; }
-
-        .access-card p {
-            font-size: 0.82rem;
+            padding: 6px 16px;
+            font-size: 0.72rem; font-weight: 600;
             color: var(--text-muted);
-            margin-bottom: 24px;
-            line-height: 1.5;
         }
 
-        .access-features {
-            text-align: left;
-            margin-bottom: 24px;
-            padding: 0;
-            list-style: none;
-        }
-
-        .access-features li {
-            font-size: 0.78rem;
-            color: var(--text-muted);
-            padding: 5px 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .access-features li i {
-            font-size: 0.7rem;
-            flex-shrink: 0;
-        }
-
-        .access-card--operator .access-features li i { color: #60a5fa; }
-        .access-card--admin .access-features li i { color: #c084fc; }
-        .access-card--super .access-features li i { color: #fbbf24; }
-
-        .access-btn {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 12px 28px;
-            border-radius: 12px;
-            font-size: 0.85rem; font-weight: 700;
-            text-decoration: none;
-            transition: all 0.25s;
-        }
-
-        .access-card--operator .access-btn {
-            background: rgba(59,130,246,0.12);
-            color: var(--accent-light);
-            border: 1px solid rgba(59,130,246,0.2);
-        }
-        .access-card--operator .access-btn:hover {
-            background: var(--accent); color: #fff;
-            box-shadow: 0 6px 20px var(--accent-glow);
-        }
-
-        .access-card--admin .access-btn {
-            background: rgba(168,85,247,0.12);
-            color: #c084fc;
-            border: 1px solid rgba(168,85,247,0.2);
-        }
-        .access-card--admin .access-btn:hover {
-            background: var(--purple); color: #fff;
-            box-shadow: 0 6px 20px rgba(168,85,247,0.3);
-        }
-
-        .access-card--super .access-btn {
-            background: rgba(245,158,11,0.12);
-            color: #fbbf24;
-            border: 1px solid rgba(245,158,11,0.2);
-        }
-        .access-card--super .access-btn:hover {
-            background: var(--amber); color: #000;
-            box-shadow: 0 6px 20px rgba(245,158,11,0.3);
-        }
+        .tech-badge i { font-size: 0.9rem; }
+        .tech-badge--blue i { color: #60a5fa; }
+        .tech-badge--green i { color: #4ade80; }
+        .tech-badge--amber i { color: #fbbf24; }
+        .tech-badge--purple i { color: #c084fc; }
+        .tech-badge--red i { color: #f87171; }
+        .tech-badge--teal i { color: #2dd4bf; }
 
         /* ---- FOOTER ---- */
         .footer {
-            padding: 48px 0;
+            padding: 32px 0;
             border-top: 1px solid var(--border);
             text-align: center;
         }
 
         .footer-brand {
-            font-size: 1rem; font-weight: 800;
+            font-size: 0.9rem; font-weight: 800;
             letter-spacing: 1.5px;
-            margin-bottom: 8px;
-            color: rgba(255,255,255,0.7);
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 6px;
         }
 
-        .footer-text { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px; }
-
-        .footer-copyright {
-            font-size: 0.72rem;
-            color: rgba(148, 163, 184, 0.6);
-            letter-spacing: 0.3px;
+        .footer-text {
+            font-size: 0.72rem; color: rgba(148,163,184,0.5);
         }
 
         /* ---- RESPONSIVE ---- */
         @media (max-width: 900px) {
-            .hero-inner {
-                grid-template-columns: 1fr;
-                text-align: center;
-                gap: 48px;
-            }
-            .hero h1 { font-size: 2.5rem; }
-            .hero-desc { margin: 0 auto 36px; }
-            .hero-actions { justify-content: center; }
-            .hero-visual { order: -1; }
-
+            .quick-access { grid-template-columns: 1fr; }
             .features-grid { grid-template-columns: 1fr 1fr; }
-            .steps-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
-            .step-card:not(:last-child)::before { display: none; }
-
-            .access-grid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
-            .stats-bar { grid-template-columns: repeat(3, 1fr); gap: 32px; }
         }
 
         @media (max-width: 600px) {
-            .hero { padding: 80px 0 40px; min-height: auto; }
-            .hero h1 { font-size: 1.85rem; }
-            .hero-desc { font-size: 0.92rem; }
-            .section { padding: 64px 0; }
-            .section-title { font-size: 1.55rem; }
-
+            .header-inner { flex-direction: column; gap: 16px; text-align: center; }
             .features-grid { grid-template-columns: 1fr; }
-            .steps-grid { grid-template-columns: 1fr; }
-            .stats-bar { grid-template-columns: 1fr 1fr; }
-
-            .phone-mockup { width: 230px; }
-            .float-card { display: none; }
-
-            .nav-links .nav-link:not(.nav-link--cta) { display: none; }
-            .stat-value { font-size: 1.7rem; }
-
-            .btn { padding: 12px 22px; font-size: 0.85rem; }
+            .brand-sub { display: none; }
+            .qa-card { padding: 18px 16px; gap: 12px; }
+            .qa-icon { width: 44px; height: 44px; font-size: 1.2rem; }
+            .f-card { padding: 20px 16px; }
         }
 
-        /* ---- Scroll reveal animation ---- */
+        /* ---- Scroll reveal ---- */
         .reveal {
             opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 0.7s ease, transform 0.7s ease;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
         }
-
         .reveal.visible {
             opacity: 1;
             transform: translateY(0);
@@ -723,461 +370,288 @@
 </head>
 <body>
 
-    <!-- Background -->
     <div class="bg-grid"></div>
-    <div class="bg-glow bg-glow--1"></div>
-    <div class="bg-glow bg-glow--2"></div>
-    <div class="bg-glow bg-glow--3"></div>
 
-    <!-- ===== NAV ===== -->
-    <nav class="nav">
+    <!-- ===== HEADER ===== -->
+    <header class="header">
         <div class="container">
-            <a href="/" class="nav-brand">
-                <div class="nav-brand-icon"><i class="bi bi-geo-alt-fill"></i></div>
-                RAPCA
-            </a>
-            <div class="nav-links">
-                <a href="#funciones-campo" class="nav-link">Operador</a>
-                <a href="#funciones-admin" class="nav-link">Admin</a>
-                <a href="#proceso" class="nav-link">Proceso</a>
-                <a href="#acceso" class="nav-link nav-link--cta">
-                    <i class="bi bi-box-arrow-in-right"></i> Acceder
+            <div class="header-inner">
+                <a href="/" class="brand">
+                    <div class="brand-icon"><i class="bi bi-geo-alt-fill"></i></div>
+                    <div>
+                        <div class="brand-name">RAPCA</div>
+                        <div class="brand-sub">Registro y Análisis de Puntos de Control y Actuaciones</div>
+                    </div>
+                </a>
+                <div class="header-login">
+                    <a href="/public/login.php" class="btn-login btn-login--primary">
+                        <i class="bi bi-box-arrow-in-right"></i> Acceder
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Access -->
+            <div class="quick-access">
+                <a href="/public/login.php" class="qa-card qa-card--operador">
+                    <div class="qa-icon"><i class="bi bi-phone-fill"></i></div>
+                    <div class="qa-info">
+                        <h3>Operador de Campo</h3>
+                        <p>Captura fotos, GPS, navegación y modo offline</p>
+                    </div>
+                    <i class="bi bi-chevron-right qa-arrow"></i>
+                </a>
+                <a href="/public/login.php" class="qa-card qa-card--admin">
+                    <div class="qa-icon"><i class="bi bi-speedometer2"></i></div>
+                    <div class="qa-info">
+                        <h3>Administrador</h3>
+                        <p>Dashboard, mapas, informes y exportación</p>
+                    </div>
+                    <i class="bi bi-chevron-right qa-arrow"></i>
+                </a>
+                <a href="/public/login.php" class="qa-card qa-card--super">
+                    <div class="qa-icon"><i class="bi bi-shield-lock-fill"></i></div>
+                    <div class="qa-info">
+                        <h3>Super Administrador</h3>
+                        <p>Gestión de usuarios, infraestructuras y configuración</p>
+                    </div>
+                    <i class="bi bi-chevron-right qa-arrow"></i>
                 </a>
             </div>
         </div>
-    </nav>
+    </header>
 
-    <!-- ===== HERO ===== -->
-    <section class="hero">
+    <!-- ===== HERRAMIENTAS DE CAMPO ===== -->
+    <section class="section" id="campo">
         <div class="container">
-            <div class="hero-inner">
-                <div class="hero-content">
-                    <div class="hero-badge">
-                        <div class="hero-badge-dot"></div>
-                        Plataforma de Inspecciones en Campo
-                    </div>
-                    <h1>
-                        Inspecciones de campo<br>
-                        <span class="gradient-text">inteligentes y geolocalizadas</span>
-                    </h1>
-                    <p class="hero-desc">
-                        Captura fotos con coordenadas ETRS89, navega a infraestructuras con alertas de proximidad,
-                        compara con ghosting visual, visualiza capas WMS y KML, genera informes PDF y exporta a CSV.
-                        App instalable con modo offline avanzado.
-                    </p>
-                    <div class="hero-actions">
-                        <a href="#acceso" class="btn btn--primary">
-                            <i class="bi bi-rocket-takeoff"></i> Comenzar ahora
-                        </a>
-                        <a href="#funciones-campo" class="btn btn--outline">
-                            <i class="bi bi-play-circle"></i> Descubrir funciones
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Phone mockup -->
-                <div class="hero-visual">
-                    <div class="phone-mockup">
-                        <div class="phone-notch"></div>
-                        <div class="phone-screen">
-                            <div class="phone-header">
-                                <span class="phone-brand">RAPCA</span>
-                                <span class="phone-status"><span class="phone-status-dot"></span> ETRS89</span>
-                            </div>
-                            <div class="phone-field phone-field--ok">
-                                <div class="phone-field-label">Infraestructura</div>
-                                <div class="phone-field-value">2300FA15 Faja Aux Cortijo Pedro</div>
-                            </div>
-                            <div class="phone-field">
-                                <div class="phone-field-label">Unidad de Obra</div>
-                                <div class="phone-field-value" style="color:var(--text-muted)">Desbroce, Poda y Quema</div>
-                            </div>
-                            <div class="phone-btn-row">
-                                <div class="phone-btn phone-btn--blue">
-                                    <div class="phone-btn-icon"><i class="bi bi-camera"></i></div>
-                                    <span>Fotos Aleatorias</span>
-                                </div>
-                                <div class="phone-btn phone-btn--purple">
-                                    <div class="phone-btn-icon"><i class="bi bi-layers"></i></div>
-                                    <span>Fotos Comparativas</span>
-                                </div>
-                                <div class="phone-btn phone-btn--green">
-                                    <div class="phone-btn-icon"><i class="bi bi-map"></i></div>
-                                    <span>Ver Mapa de Visitas</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Floating cards -->
-                    <div class="float-card float-card--gps">
-                        <div class="float-card-icon" style="color: var(--green)"><i class="bi bi-crosshair"></i></div>
-                        <div class="float-card-label">GPS Activo</div>
-                        <div class="float-card-value">40.4168 N, 3.7038 W</div>
-                    </div>
-                    <div class="float-card float-card--offline">
-                        <div class="float-card-icon" style="color: var(--amber)"><i class="bi bi-cloud-arrow-down"></i></div>
-                        <div class="float-card-label">Modo Offline</div>
-                        <div class="float-card-value">Sincronización automática</div>
-                    </div>
-                </div>
+            <div class="section-header reveal">
+                <span class="section-tag section-tag--blue"><i class="bi bi-phone-fill"></i> Herramientas de Campo</span>
             </div>
-        </div>
-    </section>
-
-    <!-- ===== FEATURES: OPERADOR ===== -->
-    <section class="section" id="funciones-campo">
-        <div class="container">
-            <div class="section-label reveal"><i class="bi bi-phone-fill"></i> Herramientas de Campo</div>
-            <h2 class="section-title reveal">Operador de campo: captura y sincronización</h2>
-            <p class="section-desc reveal">
-                Interfaz mobile-first diseñada para operadores en campo. Funciona como app instalable
-                con soporte offline completo.
-            </p>
 
             <div class="features-grid">
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--blue"><i class="bi bi-camera-fill"></i></div>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--blue"><i class="bi bi-camera-fill"></i></div>
                     <h3>Fotos con Watermark GPS</h3>
-                    <p>Cada captura incluye coordenadas ETRS89, fecha/hora de Madrid, mini-mapa y nombre de infraestructura grabados directamente en la imagen.</p>
+                    <p>Cada captura incluye coordenadas ETRS89, fecha/hora, mini-mapa y nombre de infraestructura grabados directamente en la imagen.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--purple"><i class="bi bi-layers-fill"></i></div>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--purple"><i class="bi bi-layers-fill"></i></div>
                     <h3>Ghosting Comparativo</h3>
-                    <p>Superpón la foto de la visita anterior al 50% de opacidad para capturar exactamente la misma perspectiva y comparar la evolución temporal.</p>
+                    <p>Superpón la foto anterior al 50% de opacidad para capturar exactamente la misma perspectiva y comparar la evolución temporal.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--green"><i class="bi bi-map-fill"></i></div>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--green"><i class="bi bi-map-fill"></i></div>
                     <h3>Mapa de Visitas</h3>
-                    <p>Mapa interactivo con todas las infraestructuras geolocalizadas. Selector de capas base: OpenStreetMap, Ortofoto de Andalucía y Topográfico 1:10.000.</p>
+                    <p>Mapa interactivo con todas las infraestructuras geolocalizadas. Capas base: OpenStreetMap, Ortofoto de Andalucía y Topográfico 1:10.000.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--red"><i class="bi bi-cursor-fill"></i></div>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--red"><i class="bi bi-cursor-fill"></i></div>
                     <h3>Navegación con Alertas</h3>
-                    <p>Navega a cualquier infraestructura con línea de dirección en tiempo real. Pitidos de proximidad automáticos: 1 a 20m, 2 a 10m y 3 a 5m del destino.</p>
+                    <p>Navega a cualquier infraestructura con línea de dirección en tiempo real. Pitidos de proximidad: 1 a 20m, 2 a 10m y 3 a 5m del destino.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--amber"><i class="bi bi-cloud-slash-fill"></i></div>
-                    <h3>Modo Offline Avanzado</h3>
-                    <p>Captura fotos sin cobertura: se almacenan en IndexedDB y se sincronizan automáticamente al recuperar conexión, con barra de progreso en tiempo real.</p>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--amber"><i class="bi bi-cloud-slash-fill"></i></div>
+                    <h3>Modo Offline</h3>
+                    <p>Captura fotos sin cobertura: se almacenan en IndexedDB y se sincronizan automáticamente al recuperar conexión con barra de progreso.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--teal"><i class="bi bi-download"></i></div>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--teal"><i class="bi bi-download"></i></div>
                     <h3>App Instalable (PWA)</h3>
-                    <p>Instala RAPCA como aplicación nativa en Android e iOS. Acceso directo desde la pantalla de inicio sin necesidad de tiendas de aplicaciones.</p>
+                    <p>Instala RAPCA como app nativa en Android e iOS. Acceso directo desde la pantalla de inicio sin tiendas de aplicaciones.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--cyan"><i class="bi bi-signpost-split-fill"></i></div>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--cyan"><i class="bi bi-signpost-split-fill"></i></div>
                     <h3>Distancia en Tiempo Real</h3>
                     <p>Indicador visual de distancia a la infraestructura con código de colores: rojo (lejos), amarillo (cerca) y verde (destino alcanzado).</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--rose"><i class="bi bi-exclamation-triangle-fill"></i></div>
-                    <h3>Alertas de Subida</h3>
-                    <p>Si falla la subida a la NUBE, el operador recibe alerta visual. El administrador es notificado automáticamente para resolver el problema.</p>
-                </div>
-
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--indigo"><i class="bi bi-toggles"></i></div>
-                    <h3>Estados de Inspección</h3>
-                    <p>Clasifica cada foto como Antes, Durante o Después con un solo toque. El estado se refleja automáticamente en el watermark y en los informes.</p>
-                </div>
-
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--red"><i class="bi bi-bullseye"></i></div>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--red"><i class="bi bi-bullseye"></i></div>
                     <h3>Anotaciones en Foto</h3>
-                    <p>Señala puntos de interés directamente en la foto con un círculo rojo de tamaño ajustable. Añade una descripción y se muestra como advertencia en la imagen final.</p>
+                    <p>Señala puntos de interés directamente en la foto con un círculo rojo de tamaño ajustable y descripción que se muestra en la imagen final.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--orange"><i class="bi bi-eye-fill"></i></div>
-                    <h3>Vista Previa antes de Enviar</h3>
-                    <p>Revisa cada foto antes de subirla con opciones para anotar, repetir o aceptar. Control total sobre la calidad y el contenido de cada captura.</p>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--indigo"><i class="bi bi-toggles"></i></div>
+                    <h3>Estados VP / EV</h3>
+                    <p>Clasifica cada foto como VP (Visita Previa) o EV (Evaluación) con un toque. El estado se refleja en el watermark y en los informes.</p>
+                </div>
+
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--orange"><i class="bi bi-eye-fill"></i></div>
+                    <h3>Vista Previa</h3>
+                    <p>Revisa cada foto antes de subirla con opciones para anotar, repetir o aceptar. Control total sobre la calidad de cada captura.</p>
+                </div>
+
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--rose"><i class="bi bi-journal-text"></i></div>
+                    <h3>Mis Visitas</h3>
+                    <p>Consulta y edita tus registros anteriores. Cambia estado, observaciones o añade nuevas fotos a visitas previas.</p>
+                </div>
+
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--lime"><i class="bi bi-file-earmark-spreadsheet"></i></div>
+                    <h3>Exportar Excel / PDF</h3>
+                    <p>Exporta tus registros a CSV compatible con Excel o genera informes PDF con datos de infraestructuras, fotos y coordenadas GPS.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- ===== FEATURES: ADMIN ===== -->
-    <section class="section" id="funciones-admin">
+    <!-- ===== PANEL DE ADMINISTRACIÓN ===== -->
+    <section class="section" id="admin">
         <div class="container">
-            <div class="section-label reveal"><i class="bi bi-speedometer2"></i> Panel de Administración</div>
-            <h2 class="section-title reveal">Administrador: gestión, análisis e informes</h2>
-            <p class="section-desc reveal">
-                Panel completo para administradores y supervisores de empresa con herramientas
-                de gestión, análisis visual y generación de informes.
-            </p>
+            <div class="section-header reveal">
+                <span class="section-tag section-tag--purple"><i class="bi bi-speedometer2"></i> Panel de Administración</span>
+            </div>
 
             <div class="features-grid">
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--purple"><i class="bi bi-grid-1x2-fill"></i></div>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--purple"><i class="bi bi-grid-1x2-fill"></i></div>
                     <h3>Dashboard con Métricas</h3>
-                    <p>Vista general con contadores de infraestructuras, operadores activos, inspecciones, incidencias críticas, gráficos de actividad y alertas de subidas fallidas.</p>
+                    <p>Vista general con contadores de infraestructuras, operadores activos, inspecciones, incidencias, gráficos de actividad y alertas.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--blue"><i class="bi bi-clock-history"></i></div>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--blue"><i class="bi bi-clock-history"></i></div>
                     <h3>Timeline de Inspecciones</h3>
-                    <p>Historial cronológico de todas las inspecciones con filtros por operador, infraestructura, severidad y rango de fechas. Galería de fotos con lightbox.</p>
+                    <p>Historial cronológico con filtros por operador, infraestructura, severidad y rango de fechas. Galería de fotos con lightbox.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--green"><i class="bi bi-pin-map-fill"></i></div>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--green"><i class="bi bi-pin-map-fill"></i></div>
                     <h3>Mapa Interactivo Avanzado</h3>
-                    <p>Mapa con clustering, filtros dinámicos, capas KML guardadas en base de datos, drag & drop para reubicar infraestructuras y marcadores por estado.</p>
+                    <p>Clustering, filtros dinámicos, capas KML, drag & drop para reubicar infraestructuras y marcadores codificados por estado.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--teal"><i class="bi bi-globe-americas"></i></div>
-                    <h3>Capas WMS: Ortofoto y Topográfico</h3>
-                    <p>Cambia entre OpenStreetMap, Ortofoto Digital de Andalucía 2020 y Mapa Topográfico 1:10.000. Visualiza las infraestructuras sobre imágenes reales del terreno.</p>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--teal"><i class="bi bi-globe-americas"></i></div>
+                    <h3>Capas WMS</h3>
+                    <p>OpenStreetMap, Ortofoto Digital de Andalucía 2020 y Mapa Topográfico 1:10.000. Infraestructuras sobre imágenes reales del terreno.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--cyan"><i class="bi bi-arrows-fullscreen"></i></div>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--cyan"><i class="bi bi-arrows-fullscreen"></i></div>
                     <h3>Comparador de Fotos</h3>
-                    <p>Compara visitas en modo slider (arrastrar para revelar) o side-by-side. Ideal para evaluar la evolución de infraestructuras entre diferentes fechas.</p>
+                    <p>Compara visitas en modo slider o side-by-side. Ideal para evaluar la evolución de infraestructuras entre diferentes fechas.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--red"><i class="bi bi-file-earmark-pdf-fill"></i></div>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--red"><i class="bi bi-file-earmark-pdf-fill"></i></div>
                     <h3>Informes PDF</h3>
-                    <p>Genera informes profesionales con fotos comparativas lado a lado, tablas de incidencias, datos técnicos y coordenadas de cada infraestructura.</p>
+                    <p>Genera informes profesionales con fotos comparativas, tablas de incidencias, datos técnicos y coordenadas GPS.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--lime"><i class="bi bi-file-earmark-spreadsheet"></i></div>
-                    <h3>Exportar a CSV / Excel</h3>
-                    <p>Descarga todos los registros filtrados en formato CSV compatible con Excel. Incluye datos GPS, operador, severidad, observaciones y enlaces a fotos.</p>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--lime"><i class="bi bi-file-earmark-spreadsheet"></i></div>
+                    <h3>Exportar CSV / Excel</h3>
+                    <p>Descarga todos los registros filtrados en formato CSV. Incluye datos GPS, operador, severidad, observaciones y enlaces a fotos.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--amber"><i class="bi bi-file-zip-fill"></i></div>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--amber"><i class="bi bi-file-zip-fill"></i></div>
                     <h3>Descarga Masiva ZIP</h3>
-                    <p>Descarga todas las fotos de una infraestructura en un archivo ZIP organizado con nombres descriptivos: código, fecha, estado y número de secuencia.</p>
+                    <p>Todas las fotos de una infraestructura en un ZIP organizado: código INFOCA, fecha, estado y número de secuencia.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--orange"><i class="bi bi-search"></i></div>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--orange"><i class="bi bi-search"></i></div>
                     <h3>Búsqueda Global</h3>
-                    <p>Buscador instantáneo con Ctrl+K que busca en infraestructuras, registros y operadores simultáneamente. Filtros combinados por tipo de resultado.</p>
+                    <p>Buscador instantáneo con Ctrl+K que busca en infraestructuras, registros y operadores simultáneamente.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--indigo"><i class="bi bi-geo-fill"></i></div>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--indigo"><i class="bi bi-geo-fill"></i></div>
                     <h3>Importación KML / KMZ</h3>
-                    <p>Importa capas KML con puntos, líneas y polígonos. Guárdalas en la base de datos para visualizarlas siempre que abras el mapa sin volver a cargarlas.</p>
+                    <p>Importa capas KML con puntos, líneas y polígonos. Se guardan en BD para visualizarlas siempre sin volver a cargar.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--rose"><i class="bi bi-arrows-move"></i></div>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--rose"><i class="bi bi-arrows-move"></i></div>
                     <h3>Reubicación de Infraestructuras</h3>
-                    <p>Arrastra los marcadores directamente en el mapa para corregir la ubicación GPS de cualquier infraestructura. Los cambios se guardan automáticamente.</p>
+                    <p>Arrastra marcadores en el mapa para corregir la ubicación GPS. Los cambios se guardan automáticamente.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--sky"><i class="bi bi-activity"></i></div>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--sky"><i class="bi bi-activity"></i></div>
                     <h3>Indicadores de Estado</h3>
-                    <p>Cada infraestructura muestra indicadores visuales: estado de última inspección, conteo de fotos, incidencias críticas y tiempo desde la última visita.</p>
+                    <p>Cada infraestructura muestra estado de última inspección, conteo de fotos, incidencias y tiempo desde la última visita.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- ===== PLATFORM FEATURES ===== -->
-    <section class="section" id="plataforma">
+    <!-- ===== GESTIÓN E INFRAESTRUCTURAS ===== -->
+    <section class="section" id="gestion">
         <div class="container">
-            <div class="section-label reveal"><i class="bi bi-building-fill"></i> Plataforma</div>
-            <h2 class="section-title reveal">Arquitectura robusta y segura</h2>
-            <p class="section-desc reveal">
-                Plataforma diseñada para trabajo de campo con gestión de roles,
-                seguridad avanzada y campos personalizables.
-            </p>
+            <div class="section-header reveal">
+                <span class="section-tag section-tag--teal"><i class="bi bi-building-fill"></i> Gestión e Infraestructuras</span>
+            </div>
 
             <div class="features-grid">
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--teal"><i class="bi bi-shield-check"></i></div>
-                    <h3>Seguridad y Roles</h3>
-                    <p>Tres niveles de acceso: Super Administrador (control total), Administrador (solo lectura) y Operador (campo). Protección CSRF y contraseñas cifradas con bcrypt.</p>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--teal"><i class="bi bi-shield-check"></i></div>
+                    <h3>Roles y Seguridad</h3>
+                    <p>Tres niveles de acceso: Super Administrador (control total), Administrador (solo lectura) y Operador (campo). Contraseñas cifradas con bcrypt.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--rose"><i class="bi bi-ui-checks-grid"></i></div>
-                    <h3>Formularios Dinámicos</h3>
-                    <p>Configura campos personalizados: textos, selectores, checkboxes, fechas y más. Cada registro puede llevar datos técnicos adicionales según necesidad.</p>
-                </div>
-
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--amber"><i class="bi bi-people-fill"></i></div>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--amber"><i class="bi bi-people-fill"></i></div>
                     <h3>Gestión de Operadores</h3>
-                    <p>Asigna infraestructuras específicas a cada operador. Control total de quién accede a qué zona de trabajo con permisos individuales.</p>
+                    <p>Asigna infraestructuras específicas a cada operador. Control de quién accede a qué zona de trabajo con permisos individuales.</p>
                 </div>
 
-                <div class="feature-card reveal">
-                    <div class="feature-icon feature-icon--green"><i class="bi bi-database-fill-gear"></i></div>
-                    <h3>Base de datos MySQL</h3>
-                    <p>Esquema optimizado con registros geolocalizados, campos dinámicos, historial de visitas y trazabilidad completa de cada inspección.</p>
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--blue"><i class="bi bi-file-earmark-arrow-up-fill"></i></div>
+                    <h3>Importar desde Excel</h3>
+                    <p>Importa infraestructuras masivamente desde archivos .xlsx, .xls o .csv. Detección automática de cabeceras con mapeo flexible.</p>
+                </div>
+
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--green"><i class="bi bi-tree-fill"></i></div>
+                    <h3>Campos INFOCA</h3>
+                    <p>Infraestructuras con campos forestales: ID Zona, ID Unidad, Cod INFOCA, Superficie, Monte, Pendiente, Vegetación, Tipo Contrato, Parque y más.</p>
+                </div>
+
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--purple"><i class="bi bi-funnel-fill"></i></div>
+                    <h3>Filtros por Zona y Municipio</h3>
+                    <p>Filtra infraestructuras por zona INFOCA y municipio con selectores en cascada. Búsqueda rápida por nombre o código.</p>
+                </div>
+
+                <div class="f-card reveal">
+                    <div class="f-icon f-icon--rose"><i class="bi bi-database-fill-gear"></i></div>
+                    <h3>Base de Datos Optimizada</h3>
+                    <p>MySQL con registros geolocalizados, historial de visitas, campos INFOCA y trazabilidad completa de cada inspección.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- ===== HOW IT WORKS ===== -->
-    <section class="section" id="proceso">
-        <div class="container">
-            <div class="section-label reveal"><i class="bi bi-arrow-right-circle"></i> Proceso</div>
-            <h2 class="section-title reveal">De la captura al informe en 4 pasos</h2>
-            <p class="section-desc reveal">
-                Flujo simplificado desde el campo hasta el informe final, con sincronización automática.
-            </p>
-
-            <div class="steps-grid">
-                <div class="step-card reveal">
-                    <div class="step-number">1</div>
-                    <h4>Selecciona Infraestructura</h4>
-                    <p>Filtra por provincia y municipio, busca o crea la infraestructura y selecciona la unidad de obra a inspeccionar.</p>
-                </div>
-                <div class="step-card reveal">
-                    <div class="step-number">2</div>
-                    <h4>Captura Fotos</h4>
-                    <p>Toma fotos con ghosting comparativo, anota puntos de interés con círculo ajustable y revisa antes de enviar. Watermark GPS automático.</p>
-                </div>
-                <div class="step-card reveal">
-                    <div class="step-number">3</div>
-                    <h4>Sincronización</h4>
-                    <p>Las fotos se suben a la NUBE automáticamente. Sin red, se guardan en IndexedDB y se sincronizan al recuperar conexión.</p>
-                </div>
-                <div class="step-card reveal">
-                    <div class="step-number">4</div>
-                    <h4>Análisis e Informes</h4>
-                    <p>El admin accede al timeline, mapas interactivos, comparador de fotos, exporta CSV o genera informes PDF profesionales.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ===== STATS ===== -->
+    <!-- ===== TECH BADGES ===== -->
     <div class="container">
-        <div class="stats-bar">
-            <div class="stat reveal">
-                <div class="stat-value">ETRS89</div>
-                <div class="stat-label">Sistema de coordenadas</div>
-            </div>
-            <div class="stat reveal">
-                <div class="stat-value">100%</div>
-                <div class="stat-label">Funcional offline</div>
-            </div>
-            <div class="stat reveal">
-                <div class="stat-value">WMS</div>
-                <div class="stat-label">Ortofoto y Topográfico</div>
-            </div>
-            <div class="stat reveal">
-                <div class="stat-value">PDF</div>
-                <div class="stat-label">Informes automáticos</div>
-            </div>
-            <div class="stat reveal">
-                <div class="stat-value">KML</div>
-                <div class="stat-label">Capas geolocalizadas</div>
-            </div>
-            <div class="stat reveal">
-                <div class="stat-value">ZIP</div>
-                <div class="stat-label">Descarga masiva</div>
-            </div>
+        <div class="tech-strip reveal">
+            <div class="tech-badge tech-badge--blue"><i class="bi bi-crosshair"></i> ETRS89</div>
+            <div class="tech-badge tech-badge--green"><i class="bi bi-cloud-slash"></i> Offline</div>
+            <div class="tech-badge tech-badge--amber"><i class="bi bi-globe2"></i> WMS Ortofoto</div>
+            <div class="tech-badge tech-badge--purple"><i class="bi bi-filetype-pdf"></i> PDF</div>
+            <div class="tech-badge tech-badge--red"><i class="bi bi-filetype-csv"></i> CSV</div>
+            <div class="tech-badge tech-badge--teal"><i class="bi bi-geo-alt"></i> KML</div>
+            <div class="tech-badge tech-badge--blue"><i class="bi bi-file-zip"></i> ZIP</div>
+            <div class="tech-badge tech-badge--green"><i class="bi bi-phone"></i> PWA</div>
         </div>
     </div>
-
-    <!-- ===== ACCESS ===== -->
-    <section class="section" id="acceso">
-        <div class="container">
-            <div class="section-label reveal"><i class="bi bi-person-check"></i> Acceso</div>
-            <h2 class="section-title reveal">Elige tu perfil de acceso</h2>
-            <p class="section-desc reveal">
-                Tres niveles de acceso adaptados a cada rol dentro de la organización.
-            </p>
-
-            <div class="access-grid">
-                <!-- Operador -->
-                <div class="access-card access-card--operator reveal">
-                    <div class="access-icon"><i class="bi bi-phone-fill"></i></div>
-                    <h3>Operador de Campo</h3>
-                    <p>Interfaz móvil optimizada para captura de fotos geolocalizadas en campo.</p>
-                    <ul class="access-features">
-                        <li><i class="bi bi-check-circle-fill"></i> Fotos con watermark GPS (ETRS89)</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Ghosting comparativo entre visitas</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Navegación con alertas de proximidad</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Mapa con Ortofoto y Topográfico WMS</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Modo offline con auto-sincronización</li>
-                        <li><i class="bi bi-check-circle-fill"></i> App instalable (PWA)</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Estados: VP (Visita Previa) / EV (Evaluación)</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Anotaciones en foto con círculo ajustable</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Vista previa antes de enviar</li>
-                    </ul>
-                    <a href="/public/login.php" class="access-btn">
-                        <i class="bi bi-camera"></i> Acceder como Operador
-                    </a>
-                </div>
-
-                <!-- Admin -->
-                <div class="access-card access-card--admin reveal">
-                    <div class="access-icon"><i class="bi bi-speedometer2"></i></div>
-                    <h3>Administrador</h3>
-                    <p>Visualización completa de datos, análisis e informes. Acceso de solo lectura.</p>
-                    <ul class="access-features">
-                        <li><i class="bi bi-check-circle-fill"></i> Dashboard con métricas y gráficos</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Timeline y galería de inspecciones</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Mapa con capas KML, Ortofoto y Topográfico</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Comparador de fotos side-by-side</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Informes PDF y exportación CSV</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Descarga masiva de fotos en ZIP</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Vista de todas las infraestructuras</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Búsqueda global con Ctrl+K</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Solo lectura (no modifica datos)</li>
-                    </ul>
-                    <a href="/admin/login.php" class="access-btn">
-                        <i class="bi bi-box-arrow-in-right"></i> Panel de Administración
-                    </a>
-                </div>
-
-                <!-- Superadmin -->
-                <div class="access-card access-card--super reveal">
-                    <div class="access-icon"><i class="bi bi-shield-lock-fill"></i></div>
-                    <h3>Super Administrador</h3>
-                    <p>Control total de la plataforma, usuarios e infraestructuras.</p>
-                    <ul class="access-features">
-                        <li><i class="bi bi-check-circle-fill"></i> Gestión completa de usuarios</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Crear y editar infraestructuras</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Asignar operadores a infraestructuras</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Configurar campos dinámicos</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Acceso a todos los registros y fotos</li>
-                        <li><i class="bi bi-check-circle-fill"></i> Informes PDF y exportación CSV</li>
-                    </ul>
-                    <a href="/superadmin/" class="access-btn">
-                        <i class="bi bi-gear"></i> Panel Super Admin
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- ===== FOOTER ===== -->
     <footer class="footer">
         <div class="container">
-            <div class="footer-brand">
-                <i class="bi bi-geo-alt-fill"></i> RAPCA
-            </div>
-            <p class="footer-text">
-                Tu APP de recogida de datos en Campo
-            </p>
-            <p class="footer-copyright">
-                &copy; 2026 Jose Caballero Sánchez. Todos los derechos reservados.
-            </p>
+            <div class="footer-brand"><i class="bi bi-geo-alt-fill"></i> RAPCA</div>
+            <p class="footer-text">&copy; 2026 Jose Caballero Sánchez. Todos los derechos reservados.</p>
         </div>
     </footer>
 
@@ -1200,7 +674,7 @@
                     observer.unobserve(entry.target);
                 }
             });
-        }, { threshold: 0.15 });
+        }, { threshold: 0.1 });
 
         document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
     </script>
