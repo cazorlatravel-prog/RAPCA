@@ -20,6 +20,7 @@ use Dompdf\Options;
 $usuarioId  = isset($_GET['usuario_id']) ? (int) $_GET['usuario_id'] : 0;
 $registroId = isset($_GET['registro_id']) ? (int) $_GET['registro_id'] : 0;
 $all        = isset($_GET['all']) && $_GET['all'] === '1';
+$adminMode  = isset($_GET['admin']) && $_GET['admin'] === '1';
 
 if ($usuarioId <= 0) {
     http_response_code(400);
@@ -29,18 +30,36 @@ if ($usuarioId <= 0) {
 
 $pdo = getDB();
 
+// Check if user is admin/superadmin for admin mode
+$isAdmin = false;
+if ($adminMode) {
+    $stmtRole = $pdo->prepare("SELECT rol FROM usuarios WHERE id = :uid");
+    $stmtRole->execute([':uid' => $usuarioId]);
+    $userRow = $stmtRole->fetch();
+    $isAdmin = $userRow && in_array($userRow['rol'], ['admin', 'superadmin'], true);
+}
+
 try {
     if ($registroId > 0) {
         // Single record PDF
-        $stmt = $pdo->prepare("
+        $sql = "
             SELECT r.*, i.nombre AS infra_nombre, i.cod_infoca, i.provincia, i.municipio,
                    u.nombre AS usuario_nombre
             FROM registros r
             JOIN infraestructuras i ON r.infra_id = i.id
             JOIN usuarios u ON r.usuario_id = u.id
-            WHERE r.id = :id AND r.usuario_id = :uid
-        ");
-        $stmt->execute([':id' => $registroId, ':uid' => $usuarioId]);
+            WHERE r.id = :id
+        ";
+        $params = [':id' => $registroId];
+
+        // Non-admin users can only see their own records
+        if (!$isAdmin) {
+            $sql .= " AND r.usuario_id = :uid";
+            $params[':uid'] = $usuarioId;
+        }
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
         $record = $stmt->fetch();
 
         if (!$record) {
@@ -54,17 +73,32 @@ try {
 
     } elseif ($all) {
         // All records summary
-        $stmt = $pdo->prepare("
-            SELECT r.*, i.nombre AS infra_nombre, i.cod_infoca,
-                   u.nombre AS usuario_nombre
-            FROM registros r
-            JOIN infraestructuras i ON r.infra_id = i.id
-            JOIN usuarios u ON r.usuario_id = u.id
-            WHERE r.usuario_id = :uid
-            ORDER BY r.fecha DESC
-            LIMIT 200
-        ");
-        $stmt->execute([':uid' => $usuarioId]);
+        if ($isAdmin) {
+            // Admin/superadmin: ALL records from all users
+            $stmt = $pdo->prepare("
+                SELECT r.*, i.nombre AS infra_nombre, i.cod_infoca,
+                       u.nombre AS usuario_nombre
+                FROM registros r
+                JOIN infraestructuras i ON r.infra_id = i.id
+                JOIN usuarios u ON r.usuario_id = u.id
+                ORDER BY r.fecha DESC
+                LIMIT 500
+            ");
+            $stmt->execute();
+        } else {
+            // Regular user: only their records
+            $stmt = $pdo->prepare("
+                SELECT r.*, i.nombre AS infra_nombre, i.cod_infoca,
+                       u.nombre AS usuario_nombre
+                FROM registros r
+                JOIN infraestructuras i ON r.infra_id = i.id
+                JOIN usuarios u ON r.usuario_id = u.id
+                WHERE r.usuario_id = :uid
+                ORDER BY r.fecha DESC
+                LIMIT 200
+            ");
+            $stmt->execute([':uid' => $usuarioId]);
+        }
         $records = $stmt->fetchAll();
 
         if (empty($records)) {
@@ -74,7 +108,7 @@ try {
         }
 
         $html = buildAllRecordsHtml($records, $usuarioId);
-        $filename = 'RAPCA_informe_' . date('Y-m-d') . '.pdf';
+        $filename = 'RAPCA_informe_' . ($isAdmin ? 'completo_' : '') . date('Y-m-d') . '.pdf';
 
     } else {
         http_response_code(400);

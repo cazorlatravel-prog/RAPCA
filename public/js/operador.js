@@ -620,11 +620,20 @@
             if (!state.ghostUrl && state.prevPhotos.length === 0) {
                 await checkPreviousPhotos();
             }
+            // Show opacity control if ghost is active
+            const opacityCtrl = $('#ghost-opacity-control');
+            if (opacityCtrl && state.ghostActive && state.ghostUrl) {
+                opacityCtrl.classList.remove('hidden');
+                const slider = $('#ghost-opacity-slider');
+                if (slider) camGhost.style.opacity = (parseInt(slider.value) / 100).toString();
+            }
         } else {
             camSeqCounter.classList.add('hidden');
             btnGhostToggle.classList.add('hidden');
             btnLoadPrev.classList.add('hidden');
             camGhost.classList.remove('active');
+            const opacityCtrl = $('#ghost-opacity-control');
+            if (opacityCtrl) opacityCtrl.classList.add('hidden');
         }
 
         // Start camera
@@ -658,6 +667,9 @@
     function closeCamera() {
         stopCameraStream();
         camGhost.classList.remove('active');
+        camGhost.style.opacity = '';
+        const opacityCtrl = $('#ghost-opacity-control');
+        if (opacityCtrl) opacityCtrl.classList.add('hidden');
         hideCompass();
         hideCamMiniMap();
         showScreen('ficha');
@@ -756,6 +768,13 @@
         camGhost.classList.add('active');
         camGhost.classList.remove('off');
         btnGhostToggle.classList.add('active');
+        // Show opacity control and sync
+        const opacityCtrl = $('#ghost-opacity-control');
+        const slider = $('#ghost-opacity-slider');
+        if (opacityCtrl) opacityCtrl.classList.remove('hidden');
+        if (slider) {
+            camGhost.style.opacity = (parseInt(slider.value) / 100).toString();
+        }
     }
 
     // ===================================================================
@@ -831,11 +850,22 @@
     }
 
     // ===================================================================
-    // SAVE TO DEVICE GALLERY
+    // SAVE TO DEVICE GALLERY (with EXIF metadata)
     // ===================================================================
-    function saveToDeviceGallery(blob, filename) {
+    async function saveToDeviceGallery(blob, filename) {
         try {
-            const url = URL.createObjectURL(blob);
+            let saveBlob = blob;
+
+            // Embed EXIF metadata if piexif is available and we have GPS data
+            if (typeof piexif !== 'undefined' && state.gps.lat != null && state.gps.lon != null) {
+                try {
+                    saveBlob = await embedExifInBlob(blob);
+                } catch (exifErr) {
+                    console.warn('EXIF embedding failed, saving without:', exifErr);
+                }
+            }
+
+            const url = URL.createObjectURL(saveBlob);
             const a = document.createElement('a');
             a.href = url;
             a.download = filename + '.jpg';
@@ -847,6 +877,94 @@
         } catch (err) {
             console.warn('Error saving to gallery:', err);
         }
+    }
+
+    // ===================================================================
+    // EXIF METADATA EMBEDDING
+    // ===================================================================
+    function embedExifInBlob(blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const dataUrl = e.target.result;
+
+                    // Build EXIF data
+                    const now = new Date();
+                    const dateStr = now.toLocaleString('sv-SE', { timeZone: 'Europe/Madrid' })
+                        .replace('T', ' ').replace(/-/g, ':').substring(0, 19)
+                        .replace(/^(\d{4})-(\d{2})-(\d{2})/, '$1:$2:$3');
+
+                    const lat = state.gps.lat;
+                    const lon = state.gps.lon;
+
+                    // Convert decimal degrees to degrees/minutes/seconds for EXIF
+                    function toExifGps(coord) {
+                        const abs = Math.abs(coord);
+                        const deg = Math.floor(abs);
+                        const minFloat = (abs - deg) * 60;
+                        const min = Math.floor(minFloat);
+                        const sec = Math.round((minFloat - min) * 60 * 100);
+                        return [[deg, 1], [min, 1], [sec, 100]];
+                    }
+
+                    const exifObj = {
+                        '0th': {},
+                        'Exif': {},
+                        'GPS': {},
+                        '1st': {},
+                    };
+
+                    // Basic image info
+                    exifObj['0th'][piexif.ImageIFD.Software] = 'RAPCA v1.0';
+                    exifObj['0th'][piexif.ImageIFD.ImageDescription] = `${state.infraName} - ${SITUACIONES_UI[state.situacionIdx]}`;
+                    exifObj['0th'][piexif.ImageIFD.Artist] = CFG.userName || 'Operador RAPCA';
+
+                    // Date/time
+                    exifObj['Exif'][piexif.ExifIFD.DateTimeOriginal] = dateStr;
+                    exifObj['Exif'][piexif.ExifIFD.DateTimeDigitized] = dateStr;
+                    exifObj['0th'][piexif.ImageIFD.DateTime] = dateStr;
+
+                    // GPS data
+                    if (lat != null && lon != null) {
+                        exifObj['GPS'][piexif.GPSIFD.GPSLatitudeRef] = lat >= 0 ? 'N' : 'S';
+                        exifObj['GPS'][piexif.GPSIFD.GPSLatitude] = toExifGps(lat);
+                        exifObj['GPS'][piexif.GPSIFD.GPSLongitudeRef] = lon >= 0 ? 'E' : 'W';
+                        exifObj['GPS'][piexif.GPSIFD.GPSLongitude] = toExifGps(lon);
+                        exifObj['GPS'][piexif.GPSIFD.GPSMapDatum] = 'ETRS89';
+                    }
+
+                    // User comment with all metadata
+                    const comment = JSON.stringify({
+                        infraestructura: state.infraName,
+                        codigo: state.infraCode,
+                        situacion: SITUACIONES_UI[state.situacionIdx],
+                        modo: state.currentMode,
+                        etrs89_lat: lat,
+                        etrs89_lon: lon,
+                        operador: CFG.userName,
+                        fecha: now.toISOString(),
+                    });
+                    exifObj['Exif'][piexif.ExifIFD.UserComment] = comment;
+
+                    const exifBytes = piexif.dump(exifObj);
+                    const newDataUrl = piexif.insert(exifBytes, dataUrl);
+
+                    // Convert data URL back to blob
+                    const byteString = atob(newDataUrl.split(',')[1]);
+                    const ab = new ArrayBuffer(byteString.length);
+                    const ia = new Uint8Array(ab);
+                    for (let i = 0; i < byteString.length; i++) {
+                        ia[i] = byteString.charCodeAt(i);
+                    }
+                    resolve(new Blob([ab], { type: 'image/jpeg' }));
+                } catch (err) {
+                    reject(err);
+                }
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
     }
 
     // ===================================================================
@@ -1311,7 +1429,21 @@
             state.ghostActive = !state.ghostActive;
             camGhost.classList.toggle('off', !state.ghostActive);
             btnGhostToggle.classList.toggle('active', state.ghostActive);
+            // Show/hide opacity slider
+            const opacityCtrl = $('#ghost-opacity-control');
+            if (opacityCtrl) opacityCtrl.classList.toggle('hidden', !state.ghostActive);
         });
+
+        // Ghost opacity slider
+        const ghostOpacitySlider = $('#ghost-opacity-slider');
+        if (ghostOpacitySlider) {
+            ghostOpacitySlider.addEventListener('input', () => {
+                const val = parseInt(ghostOpacitySlider.value);
+                camGhost.style.opacity = (val / 100).toString();
+                const label = $('#ghost-opacity-value');
+                if (label) label.textContent = val + '%';
+            });
+        }
 
         // Load previous photos
         btnLoadPrev.addEventListener('click', () => checkPreviousPhotos());
@@ -1407,6 +1539,8 @@
         });
         const btnDoExportCsv = $('#btn-do-export-csv');
         if (btnDoExportCsv) btnDoExportCsv.addEventListener('click', doExportCsv);
+        const btnDoExportXlsx = $('#btn-do-export-xlsx');
+        if (btnDoExportXlsx) btnDoExportXlsx.addEventListener('click', doExportXlsx);
 
         // PDF export
         const btnExportPdfAll = $('#btn-export-pdf-all');
@@ -2920,15 +3054,22 @@
     // ===================================================================
     let panelData = []; // Full records for export
 
+    function isAdminRole() {
+        return CFG.userRol === 'admin' || CFG.userRol === 'superadmin';
+    }
+
     async function openPanelScreen() {
         showScreen('panel');
         const body = $('#panel-body');
         if (body) body.innerHTML = '<div class="visitas-loading"><div class="spinner"></div><span>Cargando registros...</span></div>';
 
         try {
-            const res = await fetch(
-                `${CFG.endpoints.registrosMapa}?usuario_id=${CFG.usuarioId}&limit=500`
-            );
+            // Admin/superadmin: fetch all records (no usuario_id filter)
+            let url = `${CFG.endpoints.registrosMapa}?limit=1000`;
+            if (!isAdminRole()) {
+                url += `&usuario_id=${CFG.usuarioId}`;
+            }
+            const res = await fetch(url);
             const data = await res.json();
 
             if (!data.ok || !data.registros || data.registros.length === 0) {
@@ -3091,6 +3232,72 @@
     }
 
     // ===================================================================
+    // EXPORT XLSX (Real Excel)
+    // ===================================================================
+    function doExportXlsx() {
+        if (typeof XLSX === 'undefined') {
+            showToast('Librería Excel no disponible. Recarga la página.', 'error');
+            return;
+        }
+
+        const tipo = ($('#export-filter-tipo') || {}).value || '';
+        const estado = ($('#export-filter-estado') || {}).value || '';
+        const year = ($('#export-filter-year') || {}).value || '';
+
+        let data = panelData;
+        if (tipo) data = data.filter(r => r.tipo_foto === tipo);
+        if (estado) data = data.filter(r => r.estado_incidencia === estado);
+        if (year) data = data.filter(r => new Date(r.fecha).getFullYear() === parseInt(year));
+
+        if (data.length === 0) {
+            showToast('No hay datos para exportar con esos filtros', 'warning');
+            return;
+        }
+
+        // Build worksheet data
+        const headers = ['ID', 'Infraestructura', 'Código', 'Fecha', 'Estado', 'Tipo Foto', 'Secuencia', 'Latitud', 'Longitud', 'Observaciones', 'Operador', 'Archivo', 'URL Foto'];
+        const rows = data.map(r => [
+            r.id,
+            r.infra_nombre || '',
+            r.cod_infoca || '',
+            r.fecha || '',
+            (r.estado_incidencia || '').toUpperCase(),
+            r.tipo_foto || '',
+            r.secuencia_comparativa || '',
+            r.lat_real || '',
+            r.lon_real || '',
+            r.observaciones || '',
+            r.usuario_nombre || '',
+            r.nombre_archivo || '',
+            r.url_cloudinary || '',
+        ]);
+
+        const wsData = [headers, ...rows];
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+        // Auto-size columns
+        const colWidths = headers.map((h, i) => {
+            let max = h.length;
+            rows.forEach(row => {
+                const val = String(row[i] || '');
+                if (val.length > max) max = val.length;
+            });
+            return { wch: Math.min(max + 2, 50) };
+        });
+        ws['!cols'] = colWidths;
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Registros');
+
+        const filename = `RAPCA_registros_${new Date().toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(wb, filename);
+
+        showToast(`${data.length} registros exportados a Excel`, 'success');
+        const modal = $('#modal-export');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    // ===================================================================
     // EXPORT SINGLE PDF
     // ===================================================================
     function exportSinglePdf(registroId) {
@@ -3107,7 +3314,11 @@
             showToast('Exportar PDF no disponible', 'warning');
             return;
         }
-        const url = `${CFG.endpoints.exportPdf}?usuario_id=${CFG.usuarioId}&all=1`;
+        let url = `${CFG.endpoints.exportPdf}?usuario_id=${CFG.usuarioId}&all=1`;
+        // Admin/superadmin: export all records
+        if (isAdminRole()) {
+            url += '&admin=1';
+        }
         window.open(url, '_blank');
     }
 

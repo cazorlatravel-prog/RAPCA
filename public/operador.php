@@ -21,11 +21,15 @@ $usuarioId = isset($_GET['user']) ? (int) $_GET['user'] : (int) ($_SESSION['user
 $pdo = getDB();
 
 $userName = 'Operador';
+$userRol = 'operador';
 if ($usuarioId > 0) {
-    $stmt = $pdo->prepare("SELECT nombre FROM usuarios WHERE id = :id");
+    $stmt = $pdo->prepare("SELECT nombre, rol FROM usuarios WHERE id = :id");
     $stmt->execute([':id' => $usuarioId]);
     $row = $stmt->fetch();
-    if ($row) $userName = $row['nombre'];
+    if ($row) {
+        $userName = $row['nombre'];
+        $userRol = $row['rol'];
+    }
 }
 
 $initials = '';
@@ -212,6 +216,12 @@ if ($initials === '') $initials = 'OP';
         <img id="cam-ghost" src="" alt="" class="cam-ghost">
         <canvas id="cam-capture" class="hidden-canvas"></canvas>
         <div id="cam-seq-counter" class="cam-seq hidden"><span id="cam-seq-label">W1</span></div>
+        <div id="ghost-opacity-control" class="ghost-opacity-control hidden">
+            <i class="bi bi-eye-slash ghost-opacity-icon"></i>
+            <input type="range" id="ghost-opacity-slider" min="0" max="100" value="50" step="5" class="ghost-opacity-slider">
+            <i class="bi bi-eye ghost-opacity-icon"></i>
+            <span id="ghost-opacity-value" class="ghost-opacity-value">50%</span>
+        </div>
         <div class="cam-controls">
             <div class="cam-controls-left">
                 <button type="button" id="btn-ghost-toggle" class="cam-ctrl hidden" title="Toggle Ghost"><i class="bi bi-layers-half"></i></button>
@@ -409,8 +419,9 @@ if ($initials === '') $initials = 'OP';
                     <option value="">Todos</option>
                 </select>
             </div>
-            <div class="modal-footer">
-                <button type="button" id="btn-do-export-csv" class="preview-btn preview-btn--primary"><i class="bi bi-file-earmark-spreadsheet"></i> Exportar CSV</button>
+            <div class="modal-footer" style="gap:8px;">
+                <button type="button" id="btn-do-export-csv" class="preview-btn preview-btn--secondary"><i class="bi bi-file-earmark-text"></i> CSV</button>
+                <button type="button" id="btn-do-export-xlsx" class="preview-btn preview-btn--primary"><i class="bi bi-file-earmark-spreadsheet"></i> Excel (.xlsx)</button>
             </div>
         </div>
     </div>
@@ -462,6 +473,7 @@ if ($initials === '') $initials = 'OP';
         window.RAPCA = {
             usuarioId: <?= $usuarioId ?>,
             userName: <?= json_encode($userName) ?>,
+            userRol: <?= json_encode($userRol) ?>,
             empresaName: 'RAPCA',
             endpoints: {
                 upload: 'subir.php',
@@ -477,6 +489,8 @@ if ($initials === '') $initials = 'OP';
         };
     </script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/piexifjs@1.0.6/piexif.min.js"></script>
     <script src="js/offline.js"></script>
     <script src="js/operador.js"></script>
 </body>
