@@ -132,20 +132,27 @@ if ($initials === '') $initials = 'OP';
                 <textarea id="observaciones-general" placeholder="Notas generales de la visita..." rows="2" class="input-field input-textarea"></textarea>
             </div>
 
-            <div class="card">
-                <div class="card-label"><i class="bi bi-flag-fill"></i> Situación de la obra</div>
-                <div class="situacion-selector" id="situacion-selector">
-                    <button type="button" class="situacion-option active" data-sit="0"><i class="bi bi-eye"></i> VP (Visita Previa)</button>
-                    <button type="button" class="situacion-option" data-sit="1"><i class="bi bi-clipboard-check"></i> EV (Evaluación)</button>
-                </div>
-            </div>
-
             <div id="hint-select-infra" class="hint-box">
                 <i class="bi bi-info-circle"></i>
-                <span>Selecciona una infraestructura para habilitar las fotos</span>
+                <span>Selecciona una infraestructura para habilitar las opciones</span>
             </div>
 
             <div class="foto-buttons">
+                <button type="button" id="btn-form-vp" class="foto-btn foto-btn--vp-form" disabled>
+                    <div class="foto-btn-icon"><i class="bi bi-search"></i></div>
+                    <div class="foto-btn-text"><strong>VP - Visita Previa</strong><small>Pastoreo, estado, fotos</small></div>
+                    <span class="foto-count"><i class="bi bi-chevron-right"></i></span>
+                </button>
+                <button type="button" id="btn-form-el" class="foto-btn foto-btn--el-form" disabled>
+                    <div class="foto-btn-icon"><i class="bi bi-clipboard2"></i></div>
+                    <div class="foto-btn-text"><strong>EL - Evaluación Ligera</strong><small>Pastoreo, herbáceas, matorral</small></div>
+                    <span class="foto-count"><i class="bi bi-chevron-right"></i></span>
+                </button>
+                <button type="button" id="btn-form-ei" class="foto-btn foto-btn--ei-form" disabled>
+                    <div class="foto-btn-icon"><i class="bi bi-bar-chart-fill"></i></div>
+                    <div class="foto-btn-text"><strong>EI - Evaluación Intensa</strong><small>Plantas, palatables, matorral, transectos</small></div>
+                    <span class="foto-count"><i class="bi bi-chevron-right"></i></span>
+                </button>
                 <button type="button" id="btn-fotos-aleatorias" class="foto-btn foto-btn--aleatorio" disabled>
                     <div class="foto-btn-icon"><i class="bi bi-camera-fill"></i></div>
                     <div class="foto-btn-text"><strong>Fotos Aleatorias</strong><small>Fotos libres con GPS ETRS89</small></div>
@@ -373,6 +380,234 @@ if ($initials === '') $initials = 'OP';
         </div>
     </div>
 
+    <!-- ============================================================
+         VP FORM SCREEN
+         ============================================================ -->
+    <div id="screen-form-vp" class="screen">
+        <div class="screen-header">
+            <button type="button" id="btn-formvp-back" class="header-back"><i class="bi bi-arrow-left"></i></button>
+            <h2 class="header-title"><i class="bi bi-search"></i> VP - Visita Previa</h2>
+        </div>
+        <div class="screen-body form-body">
+            <div class="form-card">
+                <div class="form-card-title"><i class="bi bi-geo-alt"></i> Identificación</div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">Fecha</label><input type="date" id="formvp-fecha" class="form-input"></div>
+                    <div class="form-group"><label class="form-label">ID Unidad</label><input type="text" id="formvp-unidad" placeholder="23AJE01" class="form-input" oninput="this.value=this.value.toUpperCase()"></div>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-card-title"><i class="bi bi-signpost-2"></i> Grados de Pastoreo</div>
+                <div class="form-row form-row-3">
+                    <div class="form-group"><label class="form-label">Punto 1</label><select id="formvp-past1" class="form-input"><option value="">--</option><option>NP</option><option>PL</option><option>PM</option><option>PI</option><option>PMI</option></select></div>
+                    <div class="form-group"><label class="form-label">Punto 2</label><select id="formvp-past2" class="form-input"><option value="">--</option><option>NP</option><option>PL</option><option>PM</option><option>PI</option><option>PMI</option></select></div>
+                    <div class="form-group"><label class="form-label">Punto 3</label><select id="formvp-past3" class="form-input"><option value="">--</option><option>NP</option><option>PL</option><option>PM</option><option>PI</option><option>PMI</option></select></div>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-card-title"><i class="bi bi-eye"></i> Observación Estado Pastoreo</div>
+                <div class="form-row form-row-3">
+                    <div class="form-group"><label class="form-label">Señal Paso</label><select id="formvp-senal" class="form-input"><option value="">--</option><option>A</option><option>B</option><option>M</option><option>N</option></select></div>
+                    <div class="form-group"><label class="form-label">Veredas</label><select id="formvp-veredas" class="form-input"><option value="">--</option><option>A</option><option>B</option><option>M</option><option>N</option></select></div>
+                    <div class="form-group"><label class="form-label">Cagarrutas</label><select id="formvp-cagarrutas" class="form-input"><option value="">--</option><option>A</option><option>B</option><option>M</option><option>N</option></select></div>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-card-title"><i class="bi bi-camera"></i> Fotos</div>
+                <p class="form-hint">Fotos generales (ilimitadas)</p>
+                <button type="button" class="form-photo-btn form-photo-btn--vp" data-form-photo="vp-general"><i class="bi bi-camera-fill"></i> Añadir Foto VP</button>
+                <div class="form-fotos-list" id="formvp-fotos-list"></div>
+                <p class="form-hint" style="margin-top:12px">Fotos Comparativas</p>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">Waypoint 1</label><button type="button" class="form-photo-btn form-photo-btn--vp" data-form-photo="vp-w1" style="width:100%"><i class="bi bi-camera-fill"></i> W1</button><div class="form-fotos-list" id="formvp-w1-list"></div></div>
+                    <div class="form-group"><label class="form-label">Waypoint 2</label><button type="button" class="form-photo-btn form-photo-btn--vp" data-form-photo="vp-w2" style="width:100%"><i class="bi bi-camera-fill"></i> W2</button><div class="form-fotos-list" id="formvp-w2-list"></div></div>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-card-title"><i class="bi bi-chat-text"></i> Observaciones</div>
+                <textarea id="formvp-obs" rows="3" placeholder="Notas..." class="form-input form-textarea"></textarea>
+            </div>
+
+            <button type="button" id="btn-guardar-vp" class="form-save-btn form-save-btn--vp"><i class="bi bi-check-circle-fill"></i> Guardar VP</button>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         EL FORM SCREEN (Evaluación Ligera)
+         ============================================================ -->
+    <div id="screen-form-el" class="screen">
+        <div class="screen-header">
+            <button type="button" id="btn-formel-back" class="header-back"><i class="bi bi-arrow-left"></i></button>
+            <h2 class="header-title"><i class="bi bi-clipboard2"></i> EL - Evaluación Ligera</h2>
+        </div>
+        <div class="screen-body form-body">
+            <div class="form-card">
+                <div class="form-card-title"><i class="bi bi-geo-alt"></i> Identificación</div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">Fecha</label><input type="date" id="formel-fecha" class="form-input"></div>
+                    <div class="form-group"><label class="form-label">ID Unidad</label><input type="text" id="formel-unidad" placeholder="23AJE01" class="form-input" oninput="this.value=this.value.toUpperCase()"></div>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-card-title"><i class="bi bi-signpost-2"></i> Grados de Pastoreo</div>
+                <div class="form-row form-row-3">
+                    <div class="form-group"><label class="form-label">Punto 1</label><select id="formel-past1" class="form-input"><option value="">--</option><option>NP</option><option>PL</option><option>PM</option><option>PI</option><option>PMI</option></select></div>
+                    <div class="form-group"><label class="form-label">Punto 2</label><select id="formel-past2" class="form-input"><option value="">--</option><option>NP</option><option>PL</option><option>PM</option><option>PI</option><option>PMI</option></select></div>
+                    <div class="form-group"><label class="form-label">Punto 3</label><select id="formel-past3" class="form-input"><option value="">--</option><option>NP</option><option>PL</option><option>PM</option><option>PI</option><option>PMI</option></select></div>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-card-title"><i class="bi bi-flower3"></i> Herbáceas <span class="form-badge" id="formel-media-herb">x&#772; -</span></div>
+                <div class="form-notas-grid form-notas-grid-7" id="formel-herb-grid"></div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-card-title"><i class="bi bi-tree"></i> Matorralización</div>
+                <p class="form-hint">Punto 1</p>
+                <div class="form-row form-row-3">
+                    <div class="form-group"><label class="form-label">Cob %</label><input type="number" id="formel-mat1cob" min="0" max="100" class="form-input" oninput="RapcaForms.updateMatorral('el')"></div>
+                    <div class="form-group"><label class="form-label">Alt cm</label><input type="number" id="formel-mat1alt" min="0" class="form-input" oninput="RapcaForms.updateMatorral('el')"></div>
+                    <div class="form-group form-autocomplete-wrap"><label class="form-label">Especie</label><input type="text" id="formel-mat1esp" autocomplete="off" class="form-input" onfocus="RapcaForms.showAC(this)" oninput="RapcaForms.filterAC(this)"><div class="form-ac-list" id="ac-formel-mat1esp"></div></div>
+                </div>
+                <p class="form-hint" style="margin-top:10px">Punto 2</p>
+                <div class="form-row form-row-3">
+                    <div class="form-group"><label class="form-label">Cob %</label><input type="number" id="formel-mat2cob" min="0" max="100" class="form-input" oninput="RapcaForms.updateMatorral('el')"></div>
+                    <div class="form-group"><label class="form-label">Alt cm</label><input type="number" id="formel-mat2alt" min="0" class="form-input" oninput="RapcaForms.updateMatorral('el')"></div>
+                    <div class="form-group form-autocomplete-wrap"><label class="form-label">Especie</label><input type="text" id="formel-mat2esp" autocomplete="off" class="form-input" onfocus="RapcaForms.showAC(this)" oninput="RapcaForms.filterAC(this)"><div class="form-ac-list" id="ac-formel-mat2esp"></div></div>
+                </div>
+                <div class="form-resumen-matorral" id="formel-resumen-matorral">
+                    <div class="form-resumen-title"><i class="bi bi-bar-chart"></i> Resumen</div>
+                    <div class="form-resumen-vals">
+                        <div class="form-resumen-item"><span class="form-resumen-label">Media Cob %</span><span class="form-resumen-num" id="formel-mediaCob">-</span></div>
+                        <div class="form-resumen-item"><span class="form-resumen-label">Media Alt cm</span><span class="form-resumen-num" id="formel-mediaAlt">-</span></div>
+                        <div class="form-resumen-item"><span class="form-resumen-label">Vol m³/ha</span><span class="form-resumen-num form-resumen-num--vol" id="formel-volumen">-</span></div>
+                    </div>
+                    <div class="form-resumen-especies" id="formel-especies">Especies: -</div>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-card-title"><i class="bi bi-camera"></i> Fotos</div>
+                <p class="form-hint">Fotos generales</p>
+                <button type="button" class="form-photo-btn form-photo-btn--el" data-form-photo="el-general"><i class="bi bi-camera-fill"></i> Añadir Foto EL</button>
+                <div class="form-fotos-list" id="formel-fotos-list"></div>
+                <p class="form-hint" style="margin-top:12px">Fotos Comparativas</p>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">Waypoint 1</label><button type="button" class="form-photo-btn form-photo-btn--el" data-form-photo="el-w1" style="width:100%"><i class="bi bi-camera-fill"></i> W1</button><div class="form-fotos-list" id="formel-w1-list"></div></div>
+                    <div class="form-group"><label class="form-label">Waypoint 2</label><button type="button" class="form-photo-btn form-photo-btn--el" data-form-photo="el-w2" style="width:100%"><i class="bi bi-camera-fill"></i> W2</button><div class="form-fotos-list" id="formel-w2-list"></div></div>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-card-title"><i class="bi bi-chat-text"></i> Observaciones</div>
+                <textarea id="formel-obs" rows="3" placeholder="Notas..." class="form-input form-textarea"></textarea>
+            </div>
+
+            <button type="button" id="btn-guardar-el" class="form-save-btn form-save-btn--el"><i class="bi bi-check-circle-fill"></i> Guardar EL</button>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         EI FORM SCREEN (Evaluación Intensa)
+         ============================================================ -->
+    <div id="screen-form-ei" class="screen">
+        <div class="screen-header">
+            <button type="button" id="btn-formei-back" class="header-back"><i class="bi bi-arrow-left"></i></button>
+            <h2 class="header-title"><i class="bi bi-bar-chart-fill"></i> EI - Evaluación Intensa</h2>
+        </div>
+        <div class="screen-body form-body">
+            <div class="form-card">
+                <div class="form-card-title"><i class="bi bi-geo-alt"></i> Identificación</div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">Fecha</label><input type="date" id="formei-fecha" class="form-input"></div>
+                    <div class="form-group"><label class="form-label">ID Unidad</label><input type="text" id="formei-unidad" placeholder="23AJE01" class="form-input" oninput="this.value=this.value.toUpperCase()"></div>
+                </div>
+                <div class="form-group" style="margin-top:10px">
+                    <label class="form-label">Transecto</label>
+                    <div class="form-transecto-btns" id="ei-transecto-btns">
+                        <button type="button" class="form-transecto-btn active" data-t="1">T1</button>
+                        <button type="button" class="form-transecto-btn" data-t="2">T2</button>
+                        <button type="button" class="form-transecto-btn" data-t="3">T3</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-card form-card-collapsible">
+                <div class="form-card-title form-card-toggle" data-toggle="ei-plantas-section"><i class="bi bi-flower1"></i> Plantas <span class="form-badge" id="formei-cnt-plantas">0</span> <span class="form-badge form-badge--blue" id="formei-media-plantas">x&#772; -</span> <i class="bi bi-chevron-down form-toggle-icon"></i></div>
+                <div class="form-section-content" id="ei-plantas-section"></div>
+            </div>
+
+            <div class="form-card form-card-collapsible">
+                <div class="form-card-title form-card-toggle" data-toggle="ei-palatables-section"><i class="bi bi-flower2"></i> Palatables <span class="form-badge form-badge--orange" id="formei-media-palatables">x&#772; -</span> <i class="bi bi-chevron-down form-toggle-icon"></i></div>
+                <div class="form-section-content" id="ei-palatables-section"></div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-card-title"><i class="bi bi-signpost-2"></i> Pastoreo</div>
+                <div class="form-row form-row-3">
+                    <div class="form-group"><label class="form-label">Punto 1</label><select id="formei-past1" class="form-input"><option value="">--</option><option>NP</option><option>PL</option><option>PM</option><option>PI</option><option>PMI</option></select></div>
+                    <div class="form-group"><label class="form-label">Punto 2</label><select id="formei-past2" class="form-input"><option value="">--</option><option>NP</option><option>PL</option><option>PM</option><option>PI</option><option>PMI</option></select></div>
+                    <div class="form-group"><label class="form-label">Punto 3</label><select id="formei-past3" class="form-input"><option value="">--</option><option>NP</option><option>PL</option><option>PM</option><option>PI</option><option>PMI</option></select></div>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-card-title"><i class="bi bi-flower3"></i> Herbáceas <span class="form-badge form-badge--blue" id="formei-media-herb">x&#772; -</span></div>
+                <div class="form-notas-grid form-notas-grid-7" id="formei-herb-grid"></div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-card-title"><i class="bi bi-tree"></i> Matorralización</div>
+                <p class="form-hint">Punto 1</p>
+                <div class="form-row form-row-3">
+                    <div class="form-group"><label class="form-label">Cob %</label><input type="number" id="formei-mat1cob" min="0" max="100" class="form-input" oninput="RapcaForms.updateMatorral('ei')"></div>
+                    <div class="form-group"><label class="form-label">Alt cm</label><input type="number" id="formei-mat1alt" min="0" class="form-input" oninput="RapcaForms.updateMatorral('ei')"></div>
+                    <div class="form-group form-autocomplete-wrap"><label class="form-label">Especie</label><input type="text" id="formei-mat1esp" autocomplete="off" class="form-input" onfocus="RapcaForms.showAC(this)" oninput="RapcaForms.filterAC(this)"><div class="form-ac-list" id="ac-formei-mat1esp"></div></div>
+                </div>
+                <p class="form-hint" style="margin-top:10px">Punto 2</p>
+                <div class="form-row form-row-3">
+                    <div class="form-group"><label class="form-label">Cob %</label><input type="number" id="formei-mat2cob" min="0" max="100" class="form-input" oninput="RapcaForms.updateMatorral('ei')"></div>
+                    <div class="form-group"><label class="form-label">Alt cm</label><input type="number" id="formei-mat2alt" min="0" class="form-input" oninput="RapcaForms.updateMatorral('ei')"></div>
+                    <div class="form-group form-autocomplete-wrap"><label class="form-label">Especie</label><input type="text" id="formei-mat2esp" autocomplete="off" class="form-input" onfocus="RapcaForms.showAC(this)" oninput="RapcaForms.filterAC(this)"><div class="form-ac-list" id="ac-formei-mat2esp"></div></div>
+                </div>
+                <div class="form-resumen-matorral" id="formei-resumen-matorral">
+                    <div class="form-resumen-title"><i class="bi bi-bar-chart"></i> Resumen</div>
+                    <div class="form-resumen-vals">
+                        <div class="form-resumen-item"><span class="form-resumen-label">Media Cob %</span><span class="form-resumen-num" id="formei-mediaCob">-</span></div>
+                        <div class="form-resumen-item"><span class="form-resumen-label">Media Alt cm</span><span class="form-resumen-num" id="formei-mediaAlt">-</span></div>
+                        <div class="form-resumen-item"><span class="form-resumen-label">Vol m³/ha</span><span class="form-resumen-num form-resumen-num--vol" id="formei-volumen">-</span></div>
+                    </div>
+                    <div class="form-resumen-especies" id="formei-especies">Especies: -</div>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-card-title"><i class="bi bi-camera"></i> Fotos</div>
+                <p class="form-hint">Fotos generales</p>
+                <button type="button" class="form-photo-btn form-photo-btn--ei" data-form-photo="ei-general"><i class="bi bi-camera-fill"></i> Añadir Foto EI</button>
+                <div class="form-fotos-list" id="formei-fotos-list"></div>
+                <p class="form-hint" style="margin-top:12px">Fotos Comparativas</p>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">Waypoint 1</label><button type="button" class="form-photo-btn form-photo-btn--ei" data-form-photo="ei-w1" style="width:100%"><i class="bi bi-camera-fill"></i> W1</button><div class="form-fotos-list" id="formei-w1-list"></div></div>
+                    <div class="form-group"><label class="form-label">Waypoint 2</label><button type="button" class="form-photo-btn form-photo-btn--ei" data-form-photo="ei-w2" style="width:100%"><i class="bi bi-camera-fill"></i> W2</button><div class="form-fotos-list" id="formei-w2-list"></div></div>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-card-title"><i class="bi bi-chat-text"></i> Observaciones</div>
+                <textarea id="formei-obs" rows="3" placeholder="Notas..." class="form-input form-textarea"></textarea>
+            </div>
+
+            <button type="button" id="btn-guardar-ei" class="form-save-btn form-save-btn--ei"><i class="bi bi-check-circle-fill"></i> Guardar EI - T<span id="ei-transecto-label">1</span></button>
+        </div>
+    </div>
+
     <!-- Overlays -->
     <div id="upload-overlay" class="overlay hidden"><div class="spinner"></div><span>Subiendo foto...</span></div>
 
@@ -492,6 +727,7 @@ if ($initials === '') $initials = 'OP';
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/piexifjs@1.0.6/piexif.min.js"></script>
     <script src="js/offline.js"></script>
+    <script src="js/forms.js"></script>
     <script src="js/operador.js"></script>
 </body>
 </html>

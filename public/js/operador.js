@@ -137,6 +137,33 @@
         initGPS();
         initOffline();
         registerServiceWorker();
+        initForms();
+    }
+
+    function initForms() {
+        // Expose state and functions for forms.js
+        window._rapcaState = state;
+        window._showScreen = showScreen;
+        window._openCameraForForm = function(formType, subtype) {
+            // Set situación based on form type
+            state.situacionIdx = formType === 'vp' ? 0 : 1;
+            openCamera('aleatorio');
+            // Mark that next photo should be added to form
+            state.pendingFormPhoto = { formType, subtype };
+        };
+
+        // Initialize RapcaForms
+        if (window.RapcaForms) {
+            window.RapcaForms.init();
+        }
+
+        // Form screen buttons
+        const btnFormVP = $('#btn-form-vp');
+        const btnFormEL = $('#btn-form-el');
+        const btnFormEI = $('#btn-form-ei');
+        if (btnFormVP) btnFormVP.addEventListener('click', () => showScreen('form-vp'));
+        if (btnFormEL) btnFormEL.addEventListener('click', () => showScreen('form-el'));
+        if (btnFormEI) btnFormEI.addEventListener('click', () => showScreen('form-ei'));
     }
 
     // ===================================================================
@@ -555,13 +582,8 @@
         countComparativas.textContent = '0';
         galleryGrid.innerHTML = '';
         gallerySection.classList.add('hidden');
-        // Reset situación selector in Ficha
-        const sitSel = $('#situacion-selector');
-        if (sitSel) {
-            sitSel.querySelectorAll('.situacion-option').forEach(b => b.classList.remove('active'));
-            const firstBtn = sitSel.querySelector('[data-sit="0"]');
-            if (firstBtn) firstBtn.classList.add('active');
-        }
+        // Reset situación
+        state.situacionIdx = 0;
         const obsField = $('#observaciones-general');
         if (obsField) obsField.value = '';
         updateButtonState();
@@ -575,6 +597,14 @@
         btnAleatorias.disabled = !enabled;
         btnComparativas.disabled = !enabled;
 
+        // Form buttons
+        const btnFormVP = $('#btn-form-vp');
+        const btnFormEL = $('#btn-form-el');
+        const btnFormEI = $('#btn-form-ei');
+        if (btnFormVP) btnFormVP.disabled = !enabled;
+        if (btnFormEL) btnFormEL.disabled = !enabled;
+        if (btnFormEI) btnFormEI.disabled = !enabled;
+
         // Show/hide hint
         const hint = $('#hint-select-infra');
         if (hint) {
@@ -586,6 +616,9 @@
             const hasPhotos = state.photos.length > 0;
             guardarVisitaSection.classList.toggle('hidden', !enabled || !hasPhotos);
         }
+
+        // Update state ref for forms
+        if (window._rapcaState !== state) window._rapcaState = state;
     }
 
     // ===================================================================
@@ -971,12 +1004,16 @@
     // PROCESS, UPLOAD & RETURN TO FICHA
     // ===================================================================
     async function processAndUploadPhoto(filename) {
+        // Check if this photo was from a form context
+        const formPhotoCtx = state.pendingFormPhoto || null;
+        state.pendingFormPhoto = null;
+
         // Convert preview canvas to blob
         const blob = await canvasToBlob(previewCanvas, 'image/jpeg', 0.85);
         if (!blob) {
             showToast('Error al procesar la foto', 'error');
             camVideo.play();
-            showScreen('ficha');
+            showScreen(formPhotoCtx ? 'form-' + formPhotoCtx.formType : 'ficha');
             return;
         }
 
@@ -1025,14 +1062,19 @@
                 addToGallery(localUrl, state.currentMode + ' pending', filename, seq);
                 updateCounters(seq);
 
-                showScreen('ficha');
+                if (formPhotoCtx && window.RapcaForms) {
+                    window.RapcaForms.addFormPhoto(formPhotoCtx.formType, formPhotoCtx.subtype, filename);
+                    showScreen('form-' + formPhotoCtx.formType);
+                } else {
+                    showScreen('ficha');
+                }
                 showNotification('Foto guardada (pendiente de sincronizar)');
                 return;
             } catch (queueErr) {
                 console.error('Error saving offline:', queueErr);
                 uploadOverlay.classList.add('hidden');
                 alert('Error al guardar localmente: ' + queueErr.message);
-                showScreen('ficha');
+                showScreen(formPhotoCtx ? 'form-' + formPhotoCtx.formType : 'ficha');
                 return;
             }
         }
@@ -1062,11 +1104,17 @@
             if (data.ok) {
                 addToGallery(data.url_imagen, state.currentMode, filename, seq);
                 updateCounters(seq);
-                showScreen('ficha');
+                // If from form context, add to form and return there
+                if (formPhotoCtx && window.RapcaForms) {
+                    window.RapcaForms.addFormPhoto(formPhotoCtx.formType, formPhotoCtx.subtype, filename);
+                    showScreen('form-' + formPhotoCtx.formType);
+                } else {
+                    showScreen('ficha');
+                }
                 showNotification('Foto subida correctamente');
             } else {
                 showToast(data.error || 'Error desconocido', 'error');
-                showScreen('ficha');
+                showScreen(formPhotoCtx ? 'form-' + formPhotoCtx.formType : 'ficha');
             }
         } catch (err) {
             uploadOverlay.classList.add('hidden');
@@ -1078,7 +1126,12 @@
                     const localUrl = URL.createObjectURL(blob);
                     addToGallery(localUrl, state.currentMode + ' pending', filename, seq);
                     updateCounters(seq);
-                    showScreen('ficha');
+                    if (formPhotoCtx && window.RapcaForms) {
+                        window.RapcaForms.addFormPhoto(formPhotoCtx.formType, formPhotoCtx.subtype, filename);
+                        showScreen('form-' + formPhotoCtx.formType);
+                    } else {
+                        showScreen('ficha');
+                    }
                     showNotification('Foto guardada (pendiente de sincronizar)');
                     return;
                 } catch (qErr) {
@@ -1087,7 +1140,7 @@
             }
 
             showToast('Error de red: ' + err.message, 'error');
-            showScreen('ficha');
+            showScreen(formPhotoCtx ? 'form-' + formPhotoCtx.formType : 'ficha');
         }
     }
 
@@ -2612,13 +2665,8 @@
         galleryGrid.innerHTML = '';
         gallerySection.classList.add('hidden');
 
-        // Reset situación selector in Ficha
-        const sitSel = $('#situacion-selector');
-        if (sitSel) {
-            sitSel.querySelectorAll('.situacion-option').forEach(b => b.classList.remove('active'));
-            const firstBtn = sitSel.querySelector('[data-sit="0"]');
-            if (firstBtn) firstBtn.classList.add('active');
-        }
+        // Reset situación
+        state.situacionIdx = 0;
 
         updateButtonState();
     }
@@ -3409,6 +3457,11 @@
             showToast('Error al borrar datos: ' + err.message, 'error');
         }
     }
+
+    // ===================================================================
+    // EXPOSE FOR FORMS
+    // ===================================================================
+    window.showToast = showToast;
 
     // ===================================================================
     // START
